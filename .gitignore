@@ -1,0 +1,8 @@
+build
+dist
+pyres.egg-info
+.env
+.idea
+.ipynb_checkpoints
+.DS_Store
+__pycache__
