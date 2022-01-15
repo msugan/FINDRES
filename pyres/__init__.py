@@ -90,11 +90,11 @@ def _obspy_errors(origin_time, phase_file):
     return errors
 
 
-def _horizontal_error(origin):
+def _horizontal_error(origin, earth_radius_km=6.371e3):
     lat = origin.latitude
     sigma_lat = origin.latitude_errors.uncertainty
     sigma_lon = origin.longitude_errors.uncertainty
-    return hypot(sigma_lat, sigma_lon * cos(lat))
+    return (np.pi / 180.0) * earth_radius_km * hypot(sigma_lat, sigma_lon * cos(lat))
 
 
 def _read_float(whole_str, start, end, decimals=2):
@@ -292,12 +292,6 @@ def relative_pick_time(stats1, stats2, pick1, pick2, shift):
     return (pick_time1 + pick_time2) / 2
 
 
-def filter_and_taper(trace, freq_range, taper_length=0.15):
-    trace.detrend("constant")
-    trace.filter("bandpass", freqmin=freq_range[0], freqmax=freq_range[1], corners=2, zerophase=True)
-    trace.taper(taper_length)
-
-
 def sync_traces(trace_1, trace_2, shift):
     trace_1.stats.update({'starttime': 0.0})
     trace_2.stats.update({'starttime': shift * trace_1.stats.delta})
@@ -307,6 +301,17 @@ def sync_traces(trace_1, trace_2, shift):
     trace_2.trim(starttime=starttime, endtime=endtime, pad=True, fill_value=0.0)
     trace_1.stats.update({'starttime': 0.0})
     trace_2.stats.update({'starttime': 0.0})
+
+
+def cc_preprocess(trace, pick_p_mean_delay, pick_s_mean_delay, freq_range, full_waveform_window, taper_length=0.15):
+    new_trace = trace.copy()
+    starttime = trace.stats.starttime + pick_p_mean_delay - full_waveform_window[0]
+    endtime = trace.stats.starttime + pick_s_mean_delay + full_waveform_window[1]
+    new_trace.trim(starttime=starttime, endtime=endtime)
+    new_trace.detrend("constant")
+    new_trace.filter("bandpass", freqmin=freq_range[0], freqmax=freq_range[1], corners=2, zerophase=True)
+    new_trace.taper(taper_length)
+    return new_trace
 
 
 def normalize_cc(x, y, cc_value, shift):

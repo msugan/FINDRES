@@ -72,9 +72,9 @@ if __name__ == '__main__':
         try:
             logging.debug(f"Analyzing pair {event_1.name}, {event_2.name}")
             graphics_dir = cli_args.output_dir / f"{cli_args.graphics_dir}/{event_1.name}_{event_2.name}/"
-            frequency_range, delta_sp_threshold, min_num_station = pr.piecewise_from_thresholds(min(event_1.magnitude,
-                                                                                                    event_2.magnitude),
-                                                                                                parameters['thresholds'])
+            freq_range, delta_sp_threshold, min_stations = pr.piecewise_from_thresholds(min(event_1.magnitude,
+                                                                                            event_2.magnitude),
+                                                                                        parameters['thresholds'])
 
             for trace_1, trace_2 in pr.zip_streams(read(event_1.path), read(event_2.path)):
                 station = trace_1.stats.station
@@ -96,14 +96,10 @@ if __name__ == '__main__':
 
                 pr.sync_traces(trace_1, trace_2, cc_shift_raw)
 
-                trace_1_filtered = trace_1.copy()
-                trace_2_filtered = trace_2.copy()
-                trace_1_filtered.trim(starttime=trace_1.stats.starttime + pick_p_mean_delay - parameters['full_waveform_window'][0],
-                                      endtime=trace_1.stats.starttime + pick_s_mean_delay + parameters['full_waveform_window'][1])
-                trace_2_filtered.trim(starttime=trace_2.stats.starttime + pick_p_mean_delay - parameters['full_waveform_window'][0],
-                                      endtime=trace_2.stats.starttime + pick_s_mean_delay + parameters['full_waveform_window'][1])
-                pr.filter_and_taper(trace_1_filtered, frequency_range)
-                pr.filter_and_taper(trace_2_filtered, frequency_range)
+                trace_1_filtered = pr.cc_preprocess(trace_1, pick_p_mean_delay, pick_s_mean_delay,
+                                                    freq_range, parameters['full_waveform_window'])
+                trace_2_filtered = pr.cc_preprocess(trace_2, pick_p_mean_delay, pick_s_mean_delay,
+                                                    freq_range, parameters['full_waveform_window'])
 
                 cc_shift_filtered, cc_value_unnormalized = pr.correlate_waves(trace_1_filtered.data,
                                                                               trace_2_filtered.data,
@@ -129,7 +125,7 @@ if __name__ == '__main__':
                                     starttime + pick_s_mean_delay - parameters['s_waveform_window'][0],
                                     starttime + pick_s_mean_delay + parameters['s_waveform_window'][1],
                                     cc_value,
-                                    frequency_range,
+                                    freq_range,
                                     graphics_dir / f"{event_1.name}_{event_2.name}_{station}_CCZ."
                                                    f"{cli_args.graphics_format}")
 
@@ -139,8 +135,9 @@ if __name__ == '__main__':
                                                           f"_CSP.{cli_args.graphics_format}"
                     else:
                         cs_graphics_path = None
-                    time_delay_p = pr.cross_spectrum_analysis(trace_1, trace_2, pick_p_mean_delay, parameters['p_waveform_window'],
-                                                              frequency_range, parameters['max_shift'], parameters,
+                    time_delay_p = pr.cross_spectrum_analysis(trace_1, trace_2, pick_p_mean_delay,
+                                                              parameters['p_waveform_window'],
+                                                              freq_range, parameters['max_shift'], parameters,
                                                               cs_graphics_path)
                 except BaseException as exception:
                     logging.debug(f"An error occurred during processing of P-wave for {station}", exc_info=exception)
@@ -152,8 +149,9 @@ if __name__ == '__main__':
                                                           f"_CSS.{cli_args.graphics_format}"
                     else:
                         cs_graphics_path = None
-                    time_delay_s = pr.cross_spectrum_analysis(trace_1, trace_2, pick_s_mean_delay, parameters['s_waveform_window'],
-                                                              frequency_range, parameters['max_shift'], parameters,
+                    time_delay_s = pr.cross_spectrum_analysis(trace_1, trace_2, pick_s_mean_delay,
+                                                              parameters['s_waveform_window'],
+                                                              freq_range, parameters['max_shift'], parameters,
                                                               cs_graphics_path)
                 except BaseException as exception:
                     logging.debug(f"An error occurred during processing of S-wave for {station}", exc_info=exception)
@@ -163,7 +161,7 @@ if __name__ == '__main__':
                 if abs(delta_sp) < delta_sp_threshold:
                     REs[(event_1.Index, event_2.Index)][station] = (cc_value, delta_sp)
 
-            if len(REs[(event_1.Index, event_2.Index)]) < min_num_station:
+            if len(REs[(event_1.Index, event_2.Index)]) < min_stations:
                 del REs[(event_1.Index, event_2.Index)]
             elif cli_args.graphics_dir:
                 pr.plot_similarity(event_1, event_2, REs, inventory, parameters['cross-correlation_threshold'],
@@ -183,12 +181,12 @@ if __name__ == '__main__':
     for i, family in enumerate(families):
         with open(cli_args.output_dir / f"{i}_event.sel", "w") as file:
             for n in family:
+                t_err, h_err, v_err = map(lambda s: err if (err := errors[n].get(s)) else parameters['default_' + s],
+                                          ['time_uncertainty', 'horizontal_uncertainty', 'vertical_uncertainty'])
                 file.write(f"{catalogue.loc[n, 'date'].strftime('%Y%m%d  %H%M%S%f')}   "
                            f"{catalogue.loc[n, 'latitude']:.4f}     {catalogue.loc[n, 'longitude']:.4f}    "
                            f"{catalogue.loc[n, 'depth']:.3f}   {catalogue.loc[n, 'magnitude']:.1f}    "
-                           f"{t_err if (t_err := errors[n].get('time_uncertainty')) else parameters['default_time_uncertainty']:.2f}    "
-                           f"{h_err if (h_err := errors[n].get('horizontal_uncertainty')) else parameters['default_horizontal_uncertainty']:.2f}   "
-                           f"{v_err if (v_err := errors[n].get('vertical_uncertainty')) else parameters['default_vertical_uncertainty']:.2f}        "
+                           f"{t_err:.2f}    {h_err:.2f}   {v_err:.2f}        "
                            f"{catalogue.loc[n, 'name']}\n")
         if len(family) > 2:
             with open(cli_args.output_dir / f"{i}_dt.cc", "w") as file:
@@ -197,9 +195,10 @@ if __name__ == '__main__':
                         file.write(f"#    {catalogue.loc[t1, 'name']}    {catalogue.loc[t2, 'name']}     0.0\n")
                         for station in sorted(REs[(t1, t2)]):
                             cc, delta_sp = REs[(t1, t2)][station]
-                            ttp = parameters['s_wave_speed'] * delta_sp / (parameters['p_wave_speed'] - parameters['s_wave_speed'])
+                            delta_v = parameters['p_wave_speed'] - parameters['s_wave_speed']
+                            ttp = parameters['s_wave_speed'] * delta_sp / delta_v
                             file.write(f"{station}     {ttp: 10.9f}    {cc:.2f}    P\n")
-                            tts = parameters['p_wave_speed'] * delta_sp / (parameters['s_wave_speed'] - parameters['p_wave_speed'])
+                            tts = -parameters['p_wave_speed'] * delta_sp / delta_v
                             file.write(f"{station}     {tts: 10.9f}    {cc:.2f}    S\n")
 
     toc = timer()
