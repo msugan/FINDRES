@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="pyres",
+    name="py-resw",
     version="0.0.1",
     author="Monica Sugan, Stefano Campanella",
     author_email="msugan@inogs.it, scampanella@inogs.it",
@@ -27,6 +27,5 @@ setuptools.setup(
         'tqdm',
         'obspy',
     ],
-    include_package_data=True,
-    python_requires='>=3.8',
+    python_requires='~=3.8',
 )
