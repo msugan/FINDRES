@@ -24,6 +24,13 @@ Numpy, Scipy, Scikit-learn, mtspec (©2009-2016, Lion Krischer, Moritz Beyreuthe
 
 # How to use it
 
+The package has few dependencies; the recommended way of installing them is via the Conda package manager. You can
+create a test environment using
+
+```shell
+conda create -n pyres-test python=3.8 numpy=1.21 scipy scikit-learn pandas tqdm obspy mtspec -c conda-forge
+```
+
 The package is registered on PyPi, you can install it using `pip`
 
 ```shell
@@ -59,10 +66,10 @@ optional arguments:
 
 ```
 
-You can run a test using the data provided in this repository in the directory `data/california`.
+You can run a test using the [data provided in this repository](data/california).
 
 ```shell
-cre.zmap inventory.xml parameters.json outputs --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
+pyres cre.zmap inventory.xml parameters.json outputs --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
 ```
 
 The numerical parameters are set using the `parameters.json` file. The name of the fields are self-explicative and more
