@@ -1,4 +1,4 @@
-# PyRES
+# FINDRES
 Python code for repeating earthquakes
 
 # Abstract
