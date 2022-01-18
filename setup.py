@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="py-resw",
+    name="findres",
     version="0.0.1",
     author="Monica Sugan, Stefano Campanella",
     author_email="msugan@inogs.it, scampanella@inogs.it",

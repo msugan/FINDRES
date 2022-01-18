@@ -136,13 +136,9 @@ def get_coordinates(inventory, station_code):
 
 def get_picks(event, event_coordinates, station_coordinates, trace, params, phase_file=None, phase_type=None,
               travel_times_function=None):
-    if phase_file is not None:
-        p_pick, s_pick = _read_picks(event.date, trace.stats.station, phase_file, phase_type)
-    else:
-        p_pick, s_pick = None, None
 
     station_latitude, station_longitude = station_coordinates
-    if p_pick is None:
+    if phase_file is None:
         if travel_times_function is not None:
             p_pick, s_pick = _get_travel_times(event, station_latitude,
                                                station_longitude,
@@ -154,12 +150,15 @@ def get_picks(event, event_coordinates, station_coordinates, trace, params, phas
                 s_pick -= s_pick_correction
         else:
             raise RuntimeError("Either a phase file or a model must be provided")
-    elif s_pick is None:
-        event_latitude, event_longitude = event_coordinates
-        epi_dist, _, _ = gps2dist_azimuth(event_latitude, event_longitude, station_latitude, station_longitude)
-        s_pick = estimate_s_pick(trace, p_pick, epi_dist, params['p_wave_speed'], params['s_wave_speed'],
-                                 params['s_pick_estimation_window'])
-
+    else:
+        p_pick, s_pick = _read_picks(event.date, trace.stats.station, phase_file, phase_type)
+        if p_pick is None:
+            raise RuntimeError("Phase file must provide the picking for P phase")
+        if s_pick is None:
+            event_latitude, event_longitude = event_coordinates
+            epi_dist, _, _ = gps2dist_azimuth(event_latitude, event_longitude, station_latitude, station_longitude)
+            s_pick = estimate_s_pick(trace, p_pick, epi_dist, params['p_wave_speed'], params['s_wave_speed'],
+                                     params['s_pick_estimation_window'])
     return p_pick, s_pick
 
 
@@ -191,7 +190,7 @@ def _hypoinverse_phases(origin_time, station, phase_file):
                 lines.append(line)
     p_pick, s_pick = None, None
     for line in lines:
-        if line.startswith(station):
+        if line.startswith(station) and int(line[16]) < 4:
             if not line[30:34].isspace():
                 p_pick = UTCDateTime.strptime(line[17:34], '%Y%m%d%H%M %S%f')
             elif not line[42:46].isspace():
@@ -213,9 +212,11 @@ def _hypoel_phases(origin_time, station, phase_file):
                 lines.append(line)
     p_pick, s_pick = None, None
     for line in lines:
-        if line.startswith(station):
-            p_pick = UTCDateTime.strptime(line[9:19] + line[20:24], '%y%m%d%H%M%S%f')
-            s_pick = UTCDateTime.strptime(line[9:19] + line[32:36], '%y%m%d%H%M%S%f')
+        if line.startswith(station) and int(line[7]) < 4:
+            if not line[20:24].isspace():
+                p_pick = UTCDateTime.strptime(line[9:19] + line[20:24], '%y%m%d%H%M%S%f')
+            if not line[32:36].isspace():
+                s_pick = UTCDateTime.strptime(line[9:19] + line[32:36], '%y%m%d%H%M%S%f')
     return p_pick, s_pick
 
 
@@ -225,9 +226,11 @@ def _ob_phases(origin_time, station, phase_file):
     for event in catalogue:
         if abs(event.time - obspy.UTCDateTime(origin_time)) < 1.0:
             for pick in event.picks:
-                if pick.waveform_id.station_code == station and pick.phase_hint == 'P':
+                if pick.waveform_id.station_code == station and pick.phase_hint == 'P' \
+                        and pick.time_errors.uncertainty < 1.0:
                     p_pick = pick.time
-                if pick.waveform_id.station_code == station and pick.phase_hint == 'S':
+                if pick.waveform_id.station_code == station and pick.phase_hint == 'S' \
+                        and pick.time_errors.uncertainty < 1.0:
                     s_pick = pick.time
     return p_pick, s_pick
 
@@ -242,7 +245,7 @@ def _get_travel_times(event, station_latitude, station_longitude, model_function
 
     # calculate epicentral distance
     epi_dist, _, _ = gps2dist_azimuth(event_latitude, event_longitude, station_latitude, station_longitude)
-    deg = epi_dist / (2.0 * earth_radius * np.pi / 360.0)
+    deg = (180.0 / np.pi) * epi_dist / earth_radius
 
     # Find theoretical arrival travel time for templ1 and use the same deltaP and deltaS for temp2,
     # since they should be RE.
@@ -472,7 +475,7 @@ def plot_similarity(ev1, ev2, data, inventory, cc_threshold, delta_threshold, fi
     for station, (x, y) in data[(ev1.Index, ev2.Index)].items():
         station_latitude, station_longitude = get_coordinates(inventory, station)
         z, _, _ = gps2dist_azimuth(event_latitude, event_longitude, station_latitude, station_longitude)
-        plt.scatter(x, np.absolute(y), c=z, cmap="jet")
+        plt.scatter(x, np.absolute(y), c=1e-3 * z, cmap="jet")
     plt.plot([0.7, 1], [delta_threshold, delta_threshold], linestyle="--", color="r")
     plt.plot([cc_threshold, cc_threshold], [0.0, 0.02], linestyle="--", color="r")
     plt.xlim(0.7, 1)
