@@ -1,0 +1,24 @@
+p_velocity_correction: 0.5
+s_velocity_correction: 0.3
+s_pick_estimation_window: [ 10, 200 ]
+Vp: 5700
+Vs: 3200
+max_shift: 800
+thresholds:
+  - [ 0.5, [ [ 1, 35 ], 0.003, 2 ] ]
+  - [ 1.0, [ [ 1, 25 ], 0.005, 3 ] ]
+  - [ 1.5, [ [ 1, 20 ], 0.007, 3 ] ]
+  - [ 2.0, [ [ 1, 15 ], 0.008, 5 ] ]
+full_cc_waveform_window: [ 2, 15 ]
+mt_coherence_time_bandwidth_product: 3.5
+mt_coherence_num_taper: 5
+mt_coherence_confidence: 0.90
+p_cs_waveform_window: [ 0.2, 1.3 ]
+s_cs_waveform_window: [ 0.2, 1.8 ]
+coherence_frequency_upper_bound_correction: 8
+coherence_minimum_num_points: 10
+cross-correlation_threshold: 0.9
+cs_coherence_threshold: 0.88
+hypodd_default_time_uncertainty: 0.05
+hypodd_default_horizontal_uncertainty: 0.10
+hypodd_default_vertical_uncertainty: 0.30

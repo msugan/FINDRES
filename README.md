@@ -28,7 +28,7 @@ The package has few dependencies; the recommended way of installing them is via 
 create a test environment using
 
 ```shell
-conda create -n pyres-test python=3.8 numpy=1.21 scipy scikit-learn pandas tqdm obspy mtspec -c conda-forge
+conda create -n pyres-test python=3.8 numpy=1.21 scipy scikit-learn pandas tqdm pyyaml obspy mtspec -c conda-forge
 ```
 
 The package is registered on PyPi, you can install it using `pip`

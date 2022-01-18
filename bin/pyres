@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 import argparse
-import json
 import logging
 import os
 from collections import defaultdict
@@ -14,6 +13,12 @@ from obspy import read, read_inventory
 from obspy.taup import TauPyModel
 from obspy.taup.taup_create import build_taup_model
 from tqdm import tqdm
+from yaml import load
+
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
 
 import pyres as pr
 
@@ -58,7 +63,7 @@ if __name__ == '__main__':
     with cli_args.inventory.open('r') as file:
         inventory = read_inventory(file)
     with cli_args.parameters.open('r') as file:
-        parameters = json.load(file)
+        parameters = load(file, Loader=Loader)
     catalogue = pr.read_zmap(cli_args.catalogue, extensions=['name', 'path'])
     errors = pr.read_errors(catalogue, cli_args.phase_file, cli_args.phase_type)
 
@@ -104,9 +109,9 @@ if __name__ == '__main__':
                 pr.sync_traces(trace_1, trace_2, cc_shift_raw)
 
                 trace_1_filtered = pr.cc_preprocess(trace_1, pick_p_mean_delay, pick_s_mean_delay,
-                                                    freq_range, parameters['full_waveform_window'])
+                                                    freq_range, parameters['full_cc_waveform_window'])
                 trace_2_filtered = pr.cc_preprocess(trace_2, pick_p_mean_delay, pick_s_mean_delay,
-                                                    freq_range, parameters['full_waveform_window'])
+                                                    freq_range, parameters['full_cc_waveform_window'])
 
                 cc_shift_filtered, cc_value_unnormalized = pr.correlate_waves(trace_1_filtered.data,
                                                                               trace_2_filtered.data,
@@ -123,14 +128,14 @@ if __name__ == '__main__':
                     if not os.path.exists(graphics_dir):
                         os.makedirs(graphics_dir)
 
-                    starttime = parameters['full_waveform_window'][0] - pick_p_mean_delay
+                    starttime = parameters['full_cc_waveform_window'][0] - pick_p_mean_delay
                     pr.sync_traces(trace_1_filtered, trace_2_filtered, cc_shift_filtered)
                     pr.plot_signals(trace_1_filtered, trace_2_filtered,
                                     event_1.magnitude, event_2.magnitude,
-                                    starttime + pick_p_mean_delay - parameters['p_waveform_window'][0],
-                                    starttime + pick_p_mean_delay + parameters['p_waveform_window'][1],
-                                    starttime + pick_s_mean_delay - parameters['s_waveform_window'][0],
-                                    starttime + pick_s_mean_delay + parameters['s_waveform_window'][1],
+                                    starttime + pick_p_mean_delay - parameters['p_cs_waveform_window'][0],
+                                    starttime + pick_p_mean_delay + parameters['p_cs_waveform_window'][1],
+                                    starttime + pick_s_mean_delay - parameters['s_cs_waveform_window'][0],
+                                    starttime + pick_s_mean_delay + parameters['s_cs_waveform_window'][1],
                                     cc_value,
                                     freq_range,
                                     graphics_dir / f"{event_1.name}_{event_2.name}_{station}_CCZ."
@@ -142,7 +147,7 @@ if __name__ == '__main__':
                 else:
                     cs_graphics_path = None
                 time_delay_p = pr.cross_spectrum_analysis(trace_1, trace_2, pick_p_mean_delay,
-                                                          parameters['p_waveform_window'],
+                                                          parameters['p_cs_waveform_window'],
                                                           freq_range, parameters['max_shift'], parameters,
                                                           cs_graphics_path)
 
@@ -152,7 +157,7 @@ if __name__ == '__main__':
                 else:
                     cs_graphics_path = None
                 time_delay_s = pr.cross_spectrum_analysis(trace_1, trace_2, pick_s_mean_delay,
-                                                          parameters['s_waveform_window'],
+                                                          parameters['s_cs_waveform_window'],
                                                           freq_range, parameters['max_shift'], parameters,
                                                           cs_graphics_path)
 
@@ -164,7 +169,7 @@ if __name__ == '__main__':
                     raise exception
                 else:
                     logging.debug(f"An error occurred while processing pair ({event_1.path}, {event_2.path}) "
-                                  f"at station {station}",
+                                  f"at station {trace_1.stats.station}",
                                   exc_info=exception)
         if len(REs[(event_1.Index, event_2.Index)]) < min_stations:
             del REs[(event_1.Index, event_2.Index)]
@@ -179,8 +184,9 @@ if __name__ == '__main__':
     for i, family in enumerate(families):
         with open(cli_args.output_dir / f"{i}_event.sel", "w") as file:
             for n in family:
-                t_err, h_err, v_err = map(lambda s: err if (err := errors[n].get(s)) else parameters['default_' + s],
-                                          ['time_uncertainty', 'horizontal_uncertainty', 'vertical_uncertainty'])
+                errors = map(lambda s: err if (err := errors[n].get(s)) else parameters['hypodd_default_' + s],
+                             ['time_uncertainty', 'horizontal_uncertainty', 'vertical_uncertainty'])
+                t_err, h_err, v_err = errors
                 file.write(f"{catalogue.loc[n, 'date'].strftime('%Y%m%d  %H%M%S%f')[:-4]}   "
                            f"{catalogue.loc[n, 'latitude']:.4f}     {catalogue.loc[n, 'longitude']:.4f}    "
                            f"{catalogue.loc[n, 'depth']:.3f}   {catalogue.loc[n, 'magnitude']:.1f}    "
@@ -193,10 +199,10 @@ if __name__ == '__main__':
                         file.write(f"#    {catalogue.loc[t1, 'name']}    {catalogue.loc[t2, 'name']}     0.0\n")
                         for station in sorted(REs[(t1, t2)]):
                             cc, delta_sp = REs[(t1, t2)][station]
-                            delta_v = parameters['p_wave_speed'] - parameters['s_wave_speed']
-                            ttp = parameters['s_wave_speed'] * delta_sp / delta_v
+                            delta_v = parameters['Vp'] - parameters['Vs']
+                            ttp = parameters['Vs'] * delta_sp / delta_v
                             file.write(f"{station}     {ttp: 10.9f}    {cc:.2f}    P\n")
-                            tts = -parameters['p_wave_speed'] * delta_sp / delta_v
+                            tts = -parameters['Vp'] * delta_sp / delta_v
                             file.write(f"{station}     {tts: 10.9f}    {cc:.2f}    S\n")
 
     toc = timer()

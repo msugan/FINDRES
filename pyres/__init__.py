@@ -41,7 +41,7 @@ def read_zmap(catalog_path, extensions=None):
     return zmap
 
 
-# Terrible performance, reading of phase_file should be cached
+# TODO: improve performance, reading of phase_file should be cached (also, only hypoinv has been thoroughly tested)
 def read_errors(catalogue, phase_file, phase_type):
     if phase_type == 'hypoinv':
         error_function = _hypoinverse_errors
@@ -65,7 +65,7 @@ def _textfile_errors(origin_time, phase_file, columns_delimiters):
     return errors
 
 
-# Magic numbers taken from the documentation of the hypoinverse/hypoel formats
+# Column numbers taken from the documentation of the hypoinverse/hypoel formats
 def _hypoinverse_errors(origin_time, phase_file):
     return _textfile_errors(origin_time, phase_file, {'time_uncertainty': (48, 52),
                                                       'horizontal_uncertainty': (85, 89),
@@ -144,9 +144,9 @@ def get_picks(event, event_coordinates, station_coordinates, trace, params, phas
                                                station_longitude,
                                                travel_times_function)
 
-            if p_pick_correction := params['p_pick_correction']:
+            if p_pick_correction := params['p_velocity_correction']:
                 p_pick -= p_pick_correction
-            if s_pick_correction := params['s_pick_correction']:
+            if s_pick_correction := params['s_velocity_correction']:
                 s_pick -= s_pick_correction
         else:
             raise RuntimeError("Either a phase file or a model must be provided")
@@ -157,12 +157,12 @@ def get_picks(event, event_coordinates, station_coordinates, trace, params, phas
         if s_pick is None:
             event_latitude, event_longitude = event_coordinates
             epi_dist, _, _ = gps2dist_azimuth(event_latitude, event_longitude, station_latitude, station_longitude)
-            s_pick = estimate_s_pick(trace, p_pick, epi_dist, params['p_wave_speed'], params['s_wave_speed'],
+            s_pick = estimate_s_pick(trace, p_pick, epi_dist, params['Vp'], params['Vs'],
                                      params['s_pick_estimation_window'])
     return p_pick, s_pick
 
 
-# Awful performance, phase_file should be cached
+# TODO: improve performance, phase_file should be cached (also, only hypoinv has been thoroughly tested)
 def _read_picks(origin_time, station, phase_file, phase_type):
     if phase_type == 'hypoinv':
         phases_function = _hypoinverse_phases
@@ -243,15 +243,10 @@ def _get_travel_times(event, station_latitude, station_longitude, model_function
     event_depth = event.depth
     event_depth = max(event_depth, min_event_depth)
 
-    # calculate epicentral distance
     epi_dist, _, _ = gps2dist_azimuth(event_latitude, event_longitude, station_latitude, station_longitude)
     deg = (180.0 / np.pi) * epi_dist / earth_radius
 
-    # Find theoretical arrival travel time for templ1 and use the same deltaP and deltaS for temp2,
-    # since they should be RE.
-    # possible shift should be related to error in the origin time;
     arrivals_p1 = model_function(source_depth_in_km=event_depth * 1e-3, distance_in_degree=deg, phase_list=("p", "P"))
-    # consider also inaccuracy of travel time model id specified in P_in and S_in
     arrivals_s1 = model_function(source_depth_in_km=event_depth * 1e-3, distance_in_degree=deg, phase_list=("s", "S"))
     arr_p1 = origin_time + arrivals_p1[0].time
     arr_s1 = origin_time + arrivals_s1[0].time
@@ -259,11 +254,6 @@ def _get_travel_times(event, station_latitude, station_longitude, model_function
 
 
 def estimate_s_pick(trace, pick, distance, vp, vs, window, shift=1, freqmin=1, freqmax=10):
-    """
-    estimate S-pick from envelopes, assume S pick as starting -1 sec before max envelope.
-    Max envelope to be found in the range -delta1*delta + delta2*delta sec with respect to the "rule of thumb".
-    These values can be modified.
-    """
     trace_filt = trace.copy()
     trace_filt.filter("bandpass", freqmin=freqmin, freqmax=freqmax, corners=2, zerophase=True)
     data_envelope = envelope(trace_filt.data)
@@ -367,11 +357,10 @@ def get_slope(trace1, trace2, frange, params):
     coherence = out['cohe']
     frequency = out['freq']
     phase = out['phase']
-    index_a0, = np.nonzero(coherence > params['coherence_threshold'])
+    index_a0, = np.nonzero(coherence > params['cs_coherence_threshold'])
     index_b, = np.nonzero((freq_range[0] < frequency) & (frequency < freq_range[1]))
     indices = np.intersect1d(index_a0, index_b)
 
-    # This will return the lowest index of an element with the maximum number of items (there could be more than one)
     t = np.split(indices, np.where(np.diff(indices) != 1)[0] + 1)
     index_a_sel = max(t, key=lambda x: len(x))
     a_take = coherence[index_a_sel]
@@ -379,7 +368,6 @@ def get_slope(trace1, trace2, frange, params):
     c_take = phase[index_a_sel] * np.pi / 180
 
     slope = None
-    # get continuous coherence values to further define the slope
     if len(index_a_sel) > params['coherence_minimum_num_points']:
         lr_fi_false = LinearRegression(fit_intercept=False)
         lr_fi_false.fit(b_take.reshape(-1, 1), c_take.reshape(-1, 1))
@@ -472,22 +460,20 @@ def plot_similarity(ev1, ev2, data, inventory, cc_threshold, delta_threshold, fi
     event_latitude = (ev1.latitude + ev2.latitude) / 2
     event_longitude = (ev1.longitude + ev2.longitude) / 2
     plt.figure(figsize=(7, 5), **kwargs)
-    for station, (x, y) in data[(ev1.Index, ev2.Index)].items():
-        station_latitude, station_longitude = get_coordinates(inventory, station)
-        z, _, _ = gps2dist_azimuth(event_latitude, event_longitude, station_latitude, station_longitude)
-        plt.scatter(x, np.absolute(y), c=1e-3 * z, cmap="jet")
-    plt.plot([0.7, 1], [delta_threshold, delta_threshold], linestyle="--", color="r")
-    plt.plot([cc_threshold, cc_threshold], [0.0, 0.02], linestyle="--", color="r")
-    plt.xlim(0.7, 1)
-    plt.ylim(0, 0.02)
+    xs = np.fromiter((x for x, _ in data[(ev1.Index, ev2.Index)].values()), dtype=np.float)
+    ys = np.fromiter((y for _, y in data[(ev1.Index, ev2.Index)].values()), dtype=np.float)
+    zs = np.fromiter(map(lambda s: gps2dist_azimuth(event_latitude, event_longitude, *get_coordinates(inventory, s))[0],
+                         data[(ev1.Index, ev2.Index)]),
+                     dtype=np.float)
+    plt.scatter(xs, np.absolute(ys), c=1e-3 * zs, cmap="jet")
+    plt.xlim(cc_threshold, 1.0)
+    plt.ylim(0.0, delta_threshold)
     plt.xlabel("CC Z_component")
-    plt.ylabel("Delta S-P")
+    plt.ylabel("|ΔS-P|")
     plt.title(f"{ev1.name}-{ev2.name}")
-    plt.yticks(np.arange(0, 0.02, 0.001))
-    plt.xticks(np.arange(0.7, 1, 0.05))
     cb = plt.colorbar()
     cb.set_label("epi station-event distance (km)")
-    plt.text(0.75, 0.009, f"M_{ev1.name}={ev1.magnitude}")
-    plt.text(0.75, 0.008, f"M_{ev2.name}={ev2.magnitude}")
+    plt.text(cc_threshold * 1.01, delta_threshold * 0.95, f"M_{ev1.name}={ev1.magnitude}")
+    plt.text(cc_threshold * 1.01, delta_threshold * 0.9, f"M_{ev2.name}={ev2.magnitude}")
     plt.savefig(filename)
     plt.close()
