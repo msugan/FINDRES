@@ -1,0 +1,198 @@
+#! /usr/bin/env python
+
+import argparse
+import logging
+import os
+from collections import defaultdict
+from functools import lru_cache
+from itertools import combinations
+from pathlib import Path
+from time import perf_counter as timer
+
+from obspy import read, read_inventory
+from obspy.taup import TauPyModel
+from obspy.taup.taup_create import build_taup_model
+from tqdm import tqdm
+from yaml import load, dump
+
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
+
+import findres as fres
+
+parser = argparse.ArgumentParser(prog=__file__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('catalogue', type=Path, help="Modified ZMAP catalogue containing repeater candidates, "
+                                                 "their MSEED location, and names")
+parser.add_argument('inventory', type=Path, help="Inventory of the stations data")
+parser.add_argument('parameters', type=Path, help="Numerical parameters file")
+parser.add_argument('output', type=Path, help="Output YAML file")
+parser.add_argument('--phase_file', type=Path, default=None,
+                    help="Catalogue containing the phase picking and other information if available")
+parser.add_argument('--phase_type', choices=['hypoinv', 'nll', 'quakeml', 'hypoel'], default=None,
+                    help="Type of PHASE_FILE")
+parser.add_argument('--taup_model', type=Path, default=None,
+                    help="Velocity model file without extension (assumed to be .tvel) if available")
+parser.add_argument('--rebuild_model', default=False, action='store_true',
+                    help="Force the rebuild of the velocity model (regenerate ObsPy local cache)")
+parser.add_argument('--graphics_dir', default=None, type=Path,
+                    help="Where to put the graphics relative to OUTPUT_DIR, "
+                         "if not specified the graphics is not generated")
+parser.add_argument('--graphics_format', default='pdf',
+                    help="Graphics format, must be one of the extensions recognized by matplotlib")
+parser.add_argument('--hypodd', default=False, action='store_true',
+                    help="Whether to output hypodd input files")
+parser.add_argument('--stop', default=False, action='store_true',
+                    help="Stop if exceptions are raised during the analysis, otherwise skip to the next event station")
+parser.add_argument('--log', help="Log level", default='info')
+parser.add_argument('--progress', help="Show progress bar", default=False, action='store_true')
+
+cli_args = parser.parse_args()
+
+if cli_args.phase_file is None and cli_args.taup_model is None:
+    parser.error("Either a phase file or a model must be provided")
+
+if cli_args.phase_file is not None and cli_args.phase_type is None:
+    parser.error("You must provide a type for the given phase file")
+
+logging.basicConfig(format='%(levelname)s-%(asctime)s: %(message)s',
+                    level=getattr(logging, cli_args.log.upper()))
+
+if __name__ == '__main__':
+    tic = timer()
+
+    with cli_args.inventory.open('r') as file:
+        inventory = read_inventory(file)
+    with cli_args.parameters.open('r') as file:
+        parameters = load(file, Loader=Loader)
+    catalogue = fres.read_zmap(cli_args.catalogue, extensions=['name', 'path'])
+
+    if cli_args.taup_model:
+        if cli_args.rebuild_model:
+            build_taup_model(str(cli_args.taup_model.with_suffix('.tvel')))
+        try:
+            get_travel_times = lru_cache()(TauPyModel(model=str(cli_args.taup_model)).get_travel_times)
+        except FileNotFoundError:
+            build_taup_model(str(cli_args.taup_model.with_suffix('.tvel')))
+            get_travel_times = lru_cache()(TauPyModel(model=str(cli_args.taup_model)).get_travel_times)
+    else:
+        get_travel_times = None
+
+    REs = defaultdict(dict)
+    for event_1, event_2 in tqdm(combinations(catalogue.itertuples(), 2),
+                                 total=len(catalogue) * (len(catalogue) - 1) // 2,
+                                 disable=not cli_args.progress):
+        logging.debug(f"Analyzing pair {event_1.name}, {event_2.name}")
+        graphics_dir = cli_args.output.parent / f"{cli_args.graphics_dir}/{event_1.name}_{event_2.name}/"
+        freq_range, delta_sp_threshold, min_stations = fres.piecewise_from_thresholds(min(event_1.magnitude,
+                                                                                          event_2.magnitude),
+                                                                                      parameters['thresholds'])
+        for trace_1, trace_2 in fres.zip_streams(read(event_1.path), read(event_2.path)):
+            try:
+                station = trace_1.stats.station
+                station_coordinates = fres.get_coordinates(inventory, station)
+                event_coordinates = (event_1.latitude + event_2.latitude) / 2, \
+                                    (event_1.longitude + event_2.longitude) / 2
+                pick_p_1, pick_s_1 = fres.get_picks(event_1, event_coordinates, station_coordinates, trace_1,
+                                                    parameters,
+                                                    cli_args.phase_file, cli_args.phase_type, get_travel_times)
+                pick_p_2, pick_s_2 = fres.get_picks(event_2, event_coordinates, station_coordinates, trace_2,
+                                                    parameters,
+                                                    cli_args.phase_file, cli_args.phase_type, get_travel_times)
+
+                cc_shift_raw, _ = fres.correlate_waves(trace_1.data, trace_2.data, parameters['max_shift'],
+                                                       normalize=None)
+
+                pick_p_mean_delay = fres.relative_pick_time(trace_1.stats, trace_2.stats, pick_p_1, pick_p_2,
+                                                            cc_shift_raw)
+                pick_s_mean_delay = fres.relative_pick_time(trace_1.stats, trace_2.stats, pick_s_1, pick_s_2,
+                                                            cc_shift_raw)
+
+                fres.sync_traces(trace_1, trace_2, cc_shift_raw)
+
+                trace_1_filtered = fres.cc_preprocess(trace_1, pick_p_mean_delay, pick_s_mean_delay,
+                                                      freq_range, parameters['full_cc_waveform_window'])
+                trace_2_filtered = fres.cc_preprocess(trace_2, pick_p_mean_delay, pick_s_mean_delay,
+                                                      freq_range, parameters['full_cc_waveform_window'])
+
+                cc_shift_filtered, cc_value_unnormalized = fres.correlate_waves(trace_1_filtered.data,
+                                                                                trace_2_filtered.data,
+                                                                                parameters['max_shift'],
+                                                                                normalize=None)
+                cc_value = fres.normalize_cc(trace_1_filtered.data, trace_2_filtered.data, cc_value_unnormalized,
+                                             cc_shift_filtered)
+
+                if cc_value < parameters['cross-correlation_threshold']:
+                    logging.debug(f"Cross-correlation {cc_value} lower than threshold for {station}")
+                    continue
+
+                if cli_args.graphics_dir:
+                    if not os.path.exists(graphics_dir):
+                        os.makedirs(graphics_dir)
+
+                    starttime = parameters['full_cc_waveform_window'][0] - pick_p_mean_delay
+                    fres.sync_traces(trace_1_filtered, trace_2_filtered, cc_shift_filtered)
+                    fres.plot_signals(trace_1_filtered, trace_2_filtered,
+                                      event_1.magnitude, event_2.magnitude,
+                                      starttime + pick_p_mean_delay - parameters['p_cs_waveform_window'][0],
+                                      starttime + pick_p_mean_delay + parameters['p_cs_waveform_window'][1],
+                                      starttime + pick_s_mean_delay - parameters['s_cs_waveform_window'][0],
+                                      starttime + pick_s_mean_delay + parameters['s_cs_waveform_window'][1],
+                                      cc_value,
+                                      freq_range,
+                                      graphics_dir / f"{event_1.name}_{event_2.name}_{station}_CCZ."
+                                                     f"{cli_args.graphics_format}")
+
+                if cli_args.graphics_dir:
+                    cs_graphics_path = graphics_dir / f"{event_1.name}_{event_2.name}_{station}" \
+                                                      f"_CSP.{cli_args.graphics_format}"
+                else:
+                    cs_graphics_path = None
+                time_delay_p = fres.cross_spectrum_analysis(trace_1, trace_2, pick_p_mean_delay,
+                                                            parameters['p_cs_waveform_window'],
+                                                            freq_range, parameters['max_shift'], parameters,
+                                                            cs_graphics_path)
+
+                if cli_args.graphics_dir:
+                    cs_graphics_path = graphics_dir / f"{event_1.name}_{event_2.name}_{station}" \
+                                                      f"_CSS.{cli_args.graphics_format}"
+                else:
+                    cs_graphics_path = None
+                time_delay_s = fres.cross_spectrum_analysis(trace_1, trace_2, pick_s_mean_delay,
+                                                            parameters['s_cs_waveform_window'],
+                                                            freq_range, parameters['max_shift'], parameters,
+                                                            cs_graphics_path)
+
+                delta_sp = time_delay_s - time_delay_p
+                if abs(delta_sp) < delta_sp_threshold:
+                    REs[(event_1.Index, event_2.Index)][station] = (cc_value, delta_sp)
+            except BaseException as exception:
+                if cli_args.stop:
+                    raise exception
+                else:
+                    logging.debug(f"An error occurred while processing pair ({event_1.path}, {event_2.path}) "
+                                  f"at station {trace_1.stats.station}",
+                                  exc_info=exception)
+        if len(REs[(event_1.Index, event_2.Index)]) < min_stations:
+            del REs[(event_1.Index, event_2.Index)]
+        elif cli_args.graphics_dir:
+            fres.plot_similarity(event_1, event_2, REs, inventory, parameters['cross-correlation_threshold'],
+                                 delta_sp_threshold,
+                                 graphics_dir / f"{event_1.name}-{event_2.name}.{cli_args.graphics_format}")
+
+    families = fres.connected_components(REs.keys())
+    logging.info(f"RE families: {', '.join(str([catalogue.loc[n, 'name'] for n in family]) for family in families)}")
+    with cli_args.output.open("w") as file:
+        data = {n:
+                    {f"{catalogue.loc[a, 'name'], catalogue.loc[b, 'name']}":
+                         {station: {'cross-correlation': float(cc), 'delta_sp': float(dsp)}
+                          for station, (cc, dsp) in REs.get((a, b)).items()}
+                     for a, b in combinations(family, 2)} for n, family in enumerate(families)}
+        dump(data, file, Dumper=Dumper)
+    if cli_args.hypodd:
+        errors = fres.read_errors(catalogue, cli_args.phase_file, cli_args.phase_type)
+        fres.dump_hypodd(families, catalogue, errors, REs, parameters, cli_args.output.parent)
+
+    toc = timer()
+    logging.debug(f"Elapsed time: {toc - tic:.2f} seconds")

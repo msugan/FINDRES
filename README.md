@@ -2,14 +2,14 @@
 Python code for repeating earthquakes
 
 # Abstract
-The software package PyRES is an open source seismological software. It consists of some utilities for data
-preparation (utils directory) and the main program (xxxx.py). PyRES is designed to discriminate repeating earthquakes
+The software package FINDRES is an open source seismological software. It consists of some utilities for data
+preparation (utils directory) and the main program (xxxx.py). FINDRES is designed to discriminate repeating earthquakes
 starting from a family of candidate repeating earthquakes, based on the cross-correlation values and S-P time difference
 between pairs of earthquakes (estimated using cross spectrum).
 
 # Motivation and significance
 
-The code PyRES is inspired to previously published methods that combine both seismic waveform similarity, using
+The code FINDRES is inspired to previously published methods that combine both seismic waveform similarity, using
 cross-correlation function, and differential S-P travel time measured at each seismic station (Chen et al., 2008 and
 Shakibay Senobari and Funning, 2019). The code is versatile and works with and without P and S-wave phase pickings. At
 the moment the reading of phases in archive Hypoellipse and Hypoinverse formats are implemented. The code has been
@@ -78,7 +78,7 @@ extensive information can be found in the documentation.
 # References
 
 Sugan, M., Campanella, S., Vuan, A., Shakibay Senobari, N., (2022). A Python Code for Detecting Repeating Earthquakes
-from Self-similar Waveforms (PyRES). Submitted to BSSA ?
+from Self-similar Waveforms (FINDRES). Submitted to BSSA ?
 
 Shakibay Senobari, N., Funning G. J., (2019), Widespread Fault Creep in the Northern San Francisco Bay Area Revealed by
 Multistation Cluster Detection of Repeating Earthquakes, Geophysical Research Letters, 46(12),
