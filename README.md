@@ -70,18 +70,19 @@ optional arguments:
 You can run a test using the [data provided in this repository](data/california).
 
 ```shell
-findres cre.zmap inventory.xml parameters.json outputs --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
+findres cre.zmap inventory.xml parameters.yaml outputs --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
 ```
 
-The numerical parameters are set using the `parameters.json` file. The name of the fields are self-explicative and more
+The numerical parameters are set using the `parameters.yaml` file. The name of the fields are self-explicative and more
 extensive information can be found in the documentation.
+
 
 # References
 
-Sugan, M., Campanella, S., Vuan, A., Shakibay Senobari, N., (2022). A Python Code for Detecting Repeating Earthquakes
-from Self-similar Waveforms (FINDRES). Submitted to BSSA ?
+Sugan, M., Campanella, S., Vuan, A., Shakibay Senobari, N., (2022). A Python Code for Detecting real Repeating Earthquakes
+from Self-similar Waveforms (FINDRES). Submitted
 
-Shakibay Senobari, N., Funning G. J., (2019), Widespread Fault Creep in the Northern San Francisco Bay Area Revealed by
+Shakibay Senobari, N., Funning G. J., (2019). Widespread Fault Creep in the Northern San Francisco Bay Area Revealed by
 Multistation Cluster Detection of Repeating Earthquakes, Geophysical Research Letters, 46(12),
 6425-6434, https://doi.org/10.1029/2019GL082766.
 
