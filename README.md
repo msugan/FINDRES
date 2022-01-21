@@ -78,11 +78,44 @@ optional arguments:
   --progress            Show progress bar (default: False)
 ```
 
-You can run a test using the [data provided in this repository](data/california). For example the command to analyse the
+You can run a test using the [data provided in this repository](data/california) and accessing the following folder 
+
+```shell
+cd FINDRES-main/data/california
+```
+
+For example the command to analyse the
 data and produce graphics while showing a progress bar is
 
 ```shell
 findres cre.zmap inventory.xml parameters.yaml results --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --graphics_dir=figures --progress
+```
+
+The command to analyse the
+data without graphics (speeding upt the time computation) while showing a progress bar is
+
+```shell
+findres cre.zmap inventory.xml parameters.yaml results --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
+```
+
+The command to analyse the
+data without graphics (speeding upt the time computation) and producing the HypodDD output file while showing a progress bar is
+
+```shell
+findres cre.zmap inventory.xml parameters.yaml results --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress --hypodd
+```
+
+The HypodDD output file can be used to locate the events. HypoDD must be installed.
+To run an exmaple you can accesss the following directory:
+
+```shell
+cd FINDRES-main/data/california/Hypodd_svd_1_RES
+```
+
+and type:
+
+```shell
+HypoDD hypoDD.inp
 ```
 
 The numerical parameters are set using the `parameters.yaml` file. The name of the fields are self-explicative and more
