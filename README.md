@@ -22,8 +22,7 @@ results.
 
 # Requirements
 
-Python installed to run the program (version 3.0 or more) is required [http://python.org]. Dependancies include Obspy,
-Numpy, Scipy, Scikit-learn, mtspec (©2009-2016, Lion Krischer, Moritz Beyreuther) and Matplotlib libraries. to do
+Python installed to run the program (version 3.8 or more) is required [http://python.org]. 
 
 # How to use it
 
@@ -31,21 +30,21 @@ The package has few dependencies; the recommended way of installing them is via 
 create a test environment using
 
 ```shell
-conda create -n pyres-test python=3.8 numpy=1.21 scipy scikit-learn pandas tqdm pyyaml obspy mtspec -c conda-forge
+conda create -n findres-test python=3.8 numpy=1.21 scipy scikit-learn pandas tqdm pyyaml obspy mtspec -c conda-forge
 ```
 
 The package is registered on PyPi, you can install it using `pip`
 
 ```shell
-pip install py-resw
+pip install findres
 ```
 
-After that, you'll have the `pyres` script in your path.
+After that, you'll have the `findres` script in your path.
 
 ```shell
-# $ pyres --help
+# $ findres --help
 
-usage: ./bin/pyres [-h] [--phase_file PHASE_FILE] [--phase_type {hypoinv,nll,quakeml,hypoel}] [--taup_model TAUP_MODEL] [--rebuild_model]
+usage: ./bin/findres [-h] [--phase_file PHASE_FILE] [--phase_type {hypoinv,nll,quakeml,hypoel}] [--taup_model TAUP_MODEL] [--rebuild_model]
                    [--graphics_dir GRAPHICS_DIR] [--graphics_format GRAPHICS_FORMAT] [--stop] [--log LOG] [--progress]
                    catalogue inventory parameters output_dir
 
@@ -72,7 +71,7 @@ optional arguments:
 You can run a test using the [data provided in this repository](data/california).
 
 ```shell
-pyres cre.zmap inventory.xml parameters.json outputs --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
+findres cre.zmap inventory.xml parameters.json outputs --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
 ```
 
 The numerical parameters are set using the `parameters.json` file. The name of the fields are self-explicative and more
