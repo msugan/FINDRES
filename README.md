@@ -79,14 +79,14 @@ extensive information can be found in the documentation.
 
 # References
 
-Sugan, M., Campanella, S., Vuan, A., Shakibay Senobari, N., (2022). A Python Code for Detecting real Repeating Earthquakes
+Sugan, M., Campanella, S., Vuan, A., and Shakibay Senobari, N., (2022). A Python Code for Detecting real Repeating Earthquakes
 from Self-similar Waveforms (FINDRES). Submitted
 
-Shakibay Senobari, N., Funning G. J., (2019). Widespread Fault Creep in the Northern San Francisco Bay Area Revealed by
+Shakibay Senobari, N., and Funning G. J., (2019). Widespread Fault Creep in the Northern San Francisco Bay Area Revealed by
 Multistation Cluster Detection of Repeating Earthquakes, Geophysical Research Letters, 46(12),
 6425-6434, https://doi.org/10.1029/2019GL082766.
 
-Chen, K. H., Nadeau, R. M. and Rau, R.-J. (2008). Characteristic repeating microearthquakes on an arc-continent
+Chen, K. H., Nadeau, R. M, and Rau, R.-J. (2008). Characteristic repeating microearthquakes on an arc-continent
 collision boundary – the Chihshang fault of eastern Taiwan, Earth Planet. Sci. Lett., 276,
 262–272, https://doi.org/10.1016/j.epsl.2008.09.021.
 
