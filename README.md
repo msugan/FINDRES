@@ -14,7 +14,7 @@ similarity, using cross-correlation function, and differential S-P travel time m
 seismic station (Chen et al., 2008 and Shakibay Senobari and Funning, 2019). The code is versatile 
 and works with and without P and S-wave phase pickings. At the moment the reading of phases in 
 Hypoellipse (Lahr 1999), Hypoinverse (Klein, 2002), NonlinLoc (Lomax et al. 2000), 
-and QuakeML (https://quake.ethz.ch/quakeml) format are implemented. The code has beentested using 
+and QuakeML (https://quake.ethz.ch/quakeml) format are implemented. The code has been tested using 
 synthetic and real data, providing accurate results. It contributes to the implementations of open-source
 Python packages in seismology aiming to support the activities of researchers and the reproducibility of scientific
 results.
