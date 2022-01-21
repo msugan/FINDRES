@@ -2,8 +2,7 @@
 A Python code for detecting true Repeating Earthquakes from Self-similar Waveforms (FINDRES)
 
 # Abstract
-The software package FINDRES is an open-source seismological software. It consists of some 
-utilities for data preparation (utils directory) and the main program. FINDRES is designed 
+The software package FINDRES is an open-source seismological software. FINDRES is designed 
 to discriminate repeating earthquakes starting from a family of candidate repeating earthquakes, 
 based on the cross-correlation values and S-P time difference between pairs of earthquakes 
 (estimated using cross-spectrum).
