@@ -402,7 +402,7 @@ def connected_components(edges):
 
 def dump_hypodd(families, catalogue, errors, REs, parameters, output_dir):
     for i, family in enumerate(families):
-        with (output_dir / f"{i}_event.sel").open("w") as file:
+        with (output_dir / f"{i}_RES_event.sel").open("w") as file:
             for n in family:
                 e_t, e_h, e_v = map(lambda s: err if (err := errors[n].get(s)) else parameters['hypodd_default_' + s],
                                     ['time_uncertainty', 'horizontal_uncertainty', 'vertical_uncertainty'])
@@ -412,7 +412,7 @@ def dump_hypodd(families, catalogue, errors, REs, parameters, output_dir):
                            f"{e_t:.2f}    {e_h:.2f}   {e_v:.2f}        "
                            f"{catalogue.loc[n, 'name']}\n")
         if len(family) > 2:
-            with (output_dir / f"{i}_dt.cc").open("w") as file:
+            with (output_dir / f"{i}_RES_dt.cc").open("w") as file:
                 for (t1, t2) in combinations(family, 2):
                     if REs[(t1, t2)]:
                         file.write(f"#    {catalogue.loc[t1, 'name']}    {catalogue.loc[t2, 'name']}     0.0\n")
