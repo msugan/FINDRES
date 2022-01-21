@@ -82,7 +82,7 @@ You can run a test using the [data provided in this repository](data/california)
 data and produce graphics while showing a progress bar is
 
 ```shell
-findres cre.zmap inventory.xml parameters.json outputs --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
+findres cre.zmap inventory.xml parameters.json outputs --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --graphics_dir=figures --progress
 ```
 
 The numerical parameters are set using the `parameters.yaml` file. The name of the fields are self-explicative and more
