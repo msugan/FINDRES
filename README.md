@@ -81,7 +81,7 @@ optional arguments:
 You can run a test using the [data provided in this repository](data/california) and accessing the following folder 
 
 ```shell
-cd FINDRES-main/data/california
+cd data/california
 ```
 
 For example the command to analyse the
