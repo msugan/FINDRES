@@ -32,6 +32,12 @@ create a test environment using
 conda create -n findres-test python=3.8 numpy=1.21 scipy scikit-learn pandas tqdm pyyaml obspy mtspec -c conda-forge
 ```
 
+Remember to activate the environment with
+
+```shell
+conda activate findres-test
+```
+
 The package is registered on PyPi, you can install it using `pip`
 
 ```shell
@@ -41,41 +47,46 @@ pip install findres
 After that, you'll have the `findres` script in your path.
 
 ```shell
-# $ findres --help
+# findres --help
 
 usage: ./bin/findres [-h] [--phase_file PHASE_FILE] [--phase_type {hypoinv,nll,quakeml,hypoel}] [--taup_model TAUP_MODEL] [--rebuild_model]
-                   [--graphics_dir GRAPHICS_DIR] [--graphics_format GRAPHICS_FORMAT] [--stop] [--log LOG] [--progress]
-                   catalogue inventory parameters output_dir
+                     [--graphics_dir GRAPHICS_DIR] [--graphics_format GRAPHICS_FORMAT] [--hypodd] [--stop] [--log LOG] [--progress]
+                     catalogue inventory parameters output
 
 positional arguments:
-  catalogue
-  inventory
-  parameters
-  output_dir
+  catalogue             Modified ZMAP catalogue containing repeater candidates, their MSEED location, and names
+  inventory             Inventory of the stations data
+  parameters            Numerical parameters file
+  output                Output YAML file
 
 optional arguments:
   -h, --help            show this help message and exit
   --phase_file PHASE_FILE
+                        Catalogue containing the phase picking and other information if available (default: None)
   --phase_type {hypoinv,nll,quakeml,hypoel}
+                        Type of PHASE_FILE (default: None)
   --taup_model TAUP_MODEL
-  --rebuild_model
+                        Velocity model file without extension (assumed to be .tvel) if available (default: None)
+  --rebuild_model       Force the rebuild of the velocity model (regenerate ObsPy local cache) (default: False)
   --graphics_dir GRAPHICS_DIR
+                        Where to put the graphics relative to OUTPUT_DIR, if not specified the graphics is not generated (default: None)
   --graphics_format GRAPHICS_FORMAT
-  --stop
-  --log LOG             Log level
-  --progress            Show progress bar
-
+                        Graphics format, must be one of the extensions recognized by matplotlib (default: pdf)
+  --hypodd              Whether to output hypodd input files (default: False)
+  --stop                Stop if exceptions are raised during the analysis, otherwise skip to the next event station (default: False)
+  --log LOG             Log level (default: info)
+  --progress            Show progress bar (default: False)
 ```
 
-You can run a test using the [data provided in this repository](data/california).
+You can run a test using the [data provided in this repository](data/california). For example the command to analyse the
+data and produce graphics while showing a progress bar is
 
 ```shell
-findres cre.zmap inventory.xml parameters.yaml outputs --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
+findres cre.zmap inventory.xml parameters.json outputs --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
 ```
 
 The numerical parameters are set using the `parameters.yaml` file. The name of the fields are self-explicative and more
-extensive information can be found in the documentation.
-
+extensive information can be found in the [provided example](data/california/parameters.yaml).
 
 # References
 
