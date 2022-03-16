@@ -1,6 +1,7 @@
+data
 build
 dist
-pyres.egg-info
+findres.egg-info
 .env
 .idea
 .ipynb_checkpoints
