@@ -16,6 +16,8 @@ from obspy.signal.cross_correlation import xcorr_max
 from obspy.signal.filter import envelope
 from sklearn.linear_model import LinearRegression
 
+from . import custom_formats
+
 
 def read_zmap(catalog_path, extensions=None):
     names = ['longitude',
@@ -50,6 +52,8 @@ def read_errors(catalogue, phase_file, phase_type):
         error_function = _hypoel_errors
     elif phase_type in ('quakeml', 'nll'):
         error_function = _obspy_errors
+    elif phase_type in custom_formats.formats_registry:
+        error_function = custom_formats.formats_registry[phase_type]['errors']
     else:
         raise NotImplementedError()
 
@@ -169,8 +173,10 @@ def _read_picks(origin_time, station, phase_file, phase_type):
         phases_function = _hypoinverse_phases
     elif phase_type == 'hypoel':
         phases_function = _hypoel_phases
-    elif phase_type in ['nll', 'quakeml']:
+    elif phase_type in ('nll', 'quakeml'):
         phases_function = _ob_phases
+    elif phase_type in custom_formats.formats_registry:
+        phases_function = custom_formats.formats_registry[phase_type]['phases']
     else:
         raise NotImplementedError()
 
