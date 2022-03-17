@@ -1,3 +1,4 @@
+from cmath import phase
 import logging
 from collections import defaultdict
 from itertools import combinations
@@ -40,7 +41,6 @@ def read_zmap(catalog_path, extensions=None):
                        names=names,
                        parse_dates={'date': ['year', 'month', 'day', 'hour', 'minute', 'second']},
                        date_parser=lambda datestr: pd.to_datetime(datestr, format='%Y %m %d %H %M %S.%f', utc=True))
-
     return zmap
 
 
@@ -144,7 +144,9 @@ def get_picks(event, event_coordinates, station_coordinates, trace, params, phas
 
     station_latitude, station_longitude = station_coordinates
     if phase_file is None:
-        if travel_times_function is not None:
+        if travel_times_function is None:
+            raise RuntimeError("Either a phase file or a model must be provided")
+        else:
             p_pick, s_pick = _get_travel_times(event, station_latitude,
                                                station_longitude,
                                                travel_times_function)
@@ -153,8 +155,6 @@ def get_picks(event, event_coordinates, station_coordinates, trace, params, phas
                 p_pick -= p_pick_correction
             if s_pick_correction := params['s_velocity_correction']:
                 s_pick -= s_pick_correction
-        else:
-            raise RuntimeError("Either a phase file or a model must be provided")
     else:
         p_pick, s_pick = _read_picks(event.date, trace.stats.station, phase_file, phase_type)
         if p_pick is None:

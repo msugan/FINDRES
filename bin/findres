@@ -46,6 +46,7 @@ parser.add_argument('--hypodd', default=False, action='store_true',
                     help="Whether to output hypodd input files")
 parser.add_argument('--stop', default=False, action='store_true',
                     help="Stop if exceptions are raised during the analysis, otherwise skip to the next event station")
+parser.add_argument('--include', default=None, help="Include only the listed events from catalogue")
 parser.add_argument('--log', help="Log level", default='info')
 parser.add_argument('--progress', help="Show progress bar", default=False, action='store_true')
 
@@ -68,6 +69,9 @@ if __name__ == '__main__':
     with cli_args.parameters.open('r') as file:
         parameters = load(file, Loader=Loader)
     catalogue = fres.read_zmap(cli_args.catalogue, extensions=['name', 'path'])
+    if cli_args.include:
+        include_list = [int(x) for x in cli_args.include.split(',')]
+        catalogue = catalogue.loc[catalogue['name'].isin(include_list)]
 
     if cli_args.taup_model:
         if cli_args.rebuild_model:
@@ -189,7 +193,7 @@ if __name__ == '__main__':
                     {f"{catalogue.loc[a, 'name'], catalogue.loc[b, 'name']}":
                          {station: {'cross-correlation': float(cc), 'delta_sp': float(dsp)}
                           for station, (cc, dsp) in REs.get((a, b)).items()}
-                     for a, b in combinations(family, 2)} for n, family in enumerate(families)}
+                     for a, b in REs} for n, family in enumerate(families)}
         dump(data, file, Dumper=Dumper)
     if cli_args.hypodd:
         errors = fres.read_errors(catalogue, cli_args.phase_file, cli_args.phase_type)
