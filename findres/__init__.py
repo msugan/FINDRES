@@ -57,7 +57,7 @@ def read_errors(catalogue, phase_file, phase_type):
     else:
         raise NotImplementedError()
 
-    return [error_function(event.date, phase_file) for event in catalogue.itertuples()]
+    return {event.name: error_function(event.date, phase_file) for event in catalogue.itertuples()}
 
 
 def _textfile_errors(origin_time, phase_file, columns_delimiters):

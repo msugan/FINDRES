@@ -28,6 +28,6 @@ def _rise_phases(origin_time, station, phase_file):
     return p_pick, s_pick
 
 def _rise_errors(origin_time, phase_file):
-    return None 
+    return {}
 
 formats_registry = {'rise_custom': {'phases': _rise_phases, 'errors': _rise_errors}}
