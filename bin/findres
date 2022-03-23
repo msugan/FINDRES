@@ -185,19 +185,20 @@ if __name__ == '__main__':
             fres.plot_similarity(event_1, event_2, REs, inventory, parameters['cross-correlation_threshold'],
                                  delta_sp_threshold,
                                  graphics_dir / f"{event_1.name}-{event_2.name}.{cli_args.graphics_format}")
-
-    families = fres.connected_components(REs.keys())
-    logging.info(f"RE families: {', '.join(str([catalogue.loc[n, 'name'] for n in family]) for family in families)}")
-    with cli_args.output.with_suffix('.yaml').open("w") as file:
-        data = {f"{n, list(map(lambda i: catalogue.loc[i, 'name'], family))}":
-                    {f"{catalogue.loc[a, 'name'], catalogue.loc[b, 'name']}":
-                         {station: {'cross-correlation': float(cc), 'delta_sp': float(dsp)}
-                          for station, (cc, dsp) in REs.get((a, b)).items()}
-                     for a, b in REs} for n, family in enumerate(families)}
-        dump(data, file, Dumper=Dumper)
-    if cli_args.hypodd:
-        errors = fres.read_errors(catalogue, cli_args.phase_file, cli_args.phase_type)
-        fres.dump_hypodd(families, catalogue, errors, REs, parameters, cli_args.output.parent)
+    if REs:
+        families = fres.connected_components(REs.keys())
+        logging.info(f"RE families: {', '.join(str([catalogue.loc[n, 'name'] for n in family]) for family in families)}")
+        cli_args.output.parent.mkdir(parents=True, exist_ok=True)
+        with cli_args.output.with_suffix('.yaml').open("w") as file:
+            data = {f"{n, list(map(lambda i: catalogue.loc[i, 'name'], family))}":
+                        {f"{catalogue.loc[a, 'name'], catalogue.loc[b, 'name']}":
+                            {station: {'cross-correlation': float(cc), 'delta_sp': float(dsp)}
+                            for station, (cc, dsp) in REs.get((a, b)).items()}
+                        for a, b in REs} for n, family in enumerate(families)}
+            dump(data, file, Dumper=Dumper)
+        if cli_args.hypodd:
+            errors = fres.read_errors(catalogue, cli_args.phase_file, cli_args.phase_type)
+            fres.dump_hypodd(families, catalogue, errors, REs, parameters, cli_args.output.parent)
 
     toc = timer()
     logging.debug(f"Elapsed time: {toc - tic:.2f} seconds")
