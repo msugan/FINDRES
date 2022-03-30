@@ -70,7 +70,7 @@ for Ml in Ml0:
             distancekm2=distancekm1+(distanceM/1000)
             deg2 = kilometer2degrees(distancekm2)
 
-            arrivals2P = model.get_travel_times(source_depth_in_km=depth1,distance_in_degree=deg2, phase_list=["p","p"])
+            arrivals2P = model.get_travel_times(source_depth_in_km=depth1,distance_in_degree=deg2, phase_list=["p","P"])
             arrivals2S = model.get_travel_times(source_depth_in_km=depth1,distance_in_degree=deg2, phase_list=["s","S"])
 
             arr2P = arrivals2P[0]
