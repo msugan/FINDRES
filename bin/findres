@@ -31,7 +31,7 @@ parser.add_argument('output', type=Path, help="Output YAML file")
 parser.add_argument('--phase_file', type=Path, default=None,
                     help="Catalogue containing the phase picking and other information if available")
 parser.add_argument('--phase_type', 
-                    choices=['hypoinv', 'nll', 'quakeml', 'hypoel'] + list(fres.custom_formats.formats_registry), 
+                    choices=['hypoinv', 'nll', 'quakeml', 'hypoel'] + list(fres.custom_formats.registry), 
                     default=None, help="Type of PHASE_FILE")
 parser.add_argument('--taup_model', type=Path, default=None,
                     help="Velocity model file without extension (assumed to be .tvel) if available")
