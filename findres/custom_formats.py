@@ -30,4 +30,4 @@ def _rise_phases(origin_time, station, phase_file):
 def _rise_errors(origin_time, phase_file):
     return {}
 
-formats_registry = {'rise_custom': {'phases': _rise_phases, 'errors': _rise_errors}}
+registry = {'rise_custom': {'phases': _rise_phases, 'errors': _rise_errors}}
