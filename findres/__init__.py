@@ -114,7 +114,7 @@ def piecewise_from_thresholds(x, thresholds):
     if thresholds:
         _, value = thresholds[0]
         for threshold, value in reversed(thresholds):
-            if x > threshold:
+            if x >= threshold:
                 break
         return value
     else:
@@ -143,22 +143,30 @@ def get_picks(event, event_coordinates, station_coordinates, trace, params, phas
               travel_times_function=None):
 
     station_latitude, station_longitude = station_coordinates
+
+    def compute_picks():
+        p_pick, s_pick = _get_travel_times(event, station_latitude,
+                                            station_longitude,
+                                            travel_times_function)
+
+        if p_pick_correction := params['p_velocity_correction']:
+            p_pick -= p_pick_correction
+        if s_pick_correction := params['s_velocity_correction']:
+            s_pick -= s_pick_correction
+        return p_pick, s_pick
+
     if phase_file is None:
         if travel_times_function is None:
             raise RuntimeError("Either a phase file or a model must be provided")
         else:
-            p_pick, s_pick = _get_travel_times(event, station_latitude,
-                                               station_longitude,
-                                               travel_times_function)
-
-            if p_pick_correction := params['p_velocity_correction']:
-                p_pick -= p_pick_correction
-            if s_pick_correction := params['s_velocity_correction']:
-                s_pick -= s_pick_correction
+            p_pick, s_pick = compute_picks()
     else:
         p_pick, s_pick = _read_picks(event.date, trace.stats.station, phase_file, phase_type)
         if p_pick is None:
-            raise RuntimeError("Phase file must provide the picking for P phase")
+            if travel_times_function is None:
+                raise RuntimeError("Phase file with picking for P phase or a model must be provided")
+            else:
+                p_pick, s_pick = compute_picks()
         if s_pick is None:
             event_latitude, event_longitude = event_coordinates
             epi_dist, _, _ = gps2dist_azimuth(event_latitude, event_longitude, station_latitude, station_longitude)

@@ -90,7 +90,7 @@ if __name__ == '__main__':
                                  disable=not cli_args.progress):
         logging.debug(f"Analyzing pair {event_1.name}, {event_2.name}")
         graphics_dir = cli_args.output.parent / f"{cli_args.graphics_dir}/{event_1.name}_{event_2.name}/"
-        freq_range, delta_sp_threshold, min_stations = fres.piecewise_from_thresholds(min(event_1.magnitude,
+        freq_range, delta_sp_threshold, min_stations = fres.piecewise_from_thresholds(max(event_1.magnitude,
                                                                                           event_2.magnitude),
                                                                                       parameters['thresholds'])
         for trace_1, trace_2 in fres.zip_streams(read(event_1.path), read(event_2.path)):
