@@ -289,6 +289,8 @@ def estimate_s_pick(trace, pick, distance, vp, vs, window, shift=1, freqmin=1, f
 
 
 def correlate_waves(data1, data2, max_shift, **kwargs):
+    if data1.std() == 0 or data2.std() == 0:
+        raise RuntimeError("Cannot cross-correlate costant traces.")
     cc = correlate(data1, data2, max_shift, method="direct", **kwargs)
     shift, value = xcorr_max(cc, abs_max=False)
     return shift, value
