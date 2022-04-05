@@ -30,8 +30,8 @@ parser.add_argument('parameters', type=Path, help="Numerical parameters file")
 parser.add_argument('output', type=Path, help="Output YAML file")
 parser.add_argument('--phase_file', type=Path, default=None,
                     help="Catalogue containing the phase picking and other information if available")
-parser.add_argument('--phase_type', 
-                    choices=['hypoinv', 'nll', 'quakeml', 'hypoel'] + list(fres.custom_formats.registry), 
+parser.add_argument('--phase_type',
+                    choices=['hypoinv', 'nll', 'quakeml', 'hypoel'] + list(fres.custom_formats.registry),
                     default=None, help="Type of PHASE_FILE")
 parser.add_argument('--taup_model', type=Path, default=None,
                     help="Velocity model file without extension (assumed to be .tvel) if available")
@@ -190,14 +190,16 @@ if __name__ == '__main__':
                                  graphics_dir / f"{event_1.name}-{event_2.name}.{cli_args.graphics_format}")
     if REs:
         families = fres.connected_components(REs.keys())
-        logging.info(f"RE families: {', '.join(str([catalogue.loc[n, 'name'] for n in family]) for family in families)}")
+        logging.info(
+            f"RE families: {', '.join(str([catalogue.loc[n, 'name'] for n in family]) for family in families)}")
         cli_args.output.parent.mkdir(parents=True, exist_ok=True)
         with cli_args.output.with_suffix('.yaml').open("w") as file:
             data = {f"{n, list(map(lambda i: catalogue.loc[i, 'name'], family))}":
                         {f"{catalogue.loc[a, 'name'], catalogue.loc[b, 'name']}":
-                            {station: {'cross-correlation': float(cc), 'delta_sp': float(dsp)}
-                            for station, (cc, dsp) in REs.get((a, b)).items()}
-                        for a, b in REs} for n, family in enumerate(families)}
+                             {station: {'cross-correlation': float(cc),
+                                        'delta_sp': float(dsp)}
+                              for station, (cc, dsp) in REs.get((a, b)).items()}
+                         for a, b in REs} for n, family in enumerate(families)}
             dump(data, file, Dumper=Dumper)
         if cli_args.hypodd:
             errors = fres.read_errors(catalogue, cli_args.phase_file, cli_args.phase_type)

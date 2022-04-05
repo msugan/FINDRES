@@ -1,4 +1,3 @@
-from cmath import phase
 import logging
 from collections import defaultdict
 from itertools import combinations
@@ -141,13 +140,12 @@ def get_coordinates(inventory, station_code):
 
 def get_picks(event, event_coordinates, station_coordinates, trace, params, phase_file=None, phase_type=None,
               travel_times_function=None):
-
     station_latitude, station_longitude = station_coordinates
 
     def compute_picks():
         p_pick, s_pick = _get_travel_times(event, station_latitude,
-                                            station_longitude,
-                                            travel_times_function)
+                                           station_longitude,
+                                           travel_times_function)
 
         if p_pick_correction := params['p_velocity_correction']:
             p_pick -= p_pick_correction
