@@ -96,6 +96,9 @@ if __name__ == '__main__':
         for trace_1, trace_2 in fres.zip_streams(read(event_1.path), read(event_2.path)):
             try:
                 station = trace_1.stats.station
+                if trace_1.std() == 0 or trace_2.std() == 0:
+                    logging.debug(f"Found invalid trace for {station} (constant). Skipping.")
+                    continue
                 station_coordinates = fres.get_coordinates(inventory, station)
                 event_coordinates = (event_1.latitude + event_2.latitude) / 2, \
                                     (event_1.longitude + event_2.longitude) / 2
