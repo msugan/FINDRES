@@ -1,5 +1,6 @@
 from obspy import UTCDateTime
 
+
 def _rise_phases(origin_time, station, phase_file):
     p_pick, s_pick = None, None
     with phase_file.open('r') as file:
@@ -24,10 +25,12 @@ def _rise_phases(origin_time, station, phase_file):
                         p_pick = UTCDateTime.strptime(pick_datetime, '%Y%m%d%H%M%S.%f')
                     elif pick_type == 'S':
                         s_pick = UTCDateTime.strptime(pick_datetime, '%Y%m%d%H%M%S.%f')
-    
+
     return p_pick, s_pick
+
 
 def _rise_errors(origin_time, phase_file):
     return {}
+
 
 registry = {'rise_custom': {'phases': _rise_phases, 'errors': _rise_errors}}

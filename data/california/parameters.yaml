@@ -1,8 +1,8 @@
-p_velocity_correction: 0.5 # inaccuracy in the velocity model for P (sec)
-s_velocity_correction: 0.3 # inaccuracy in the velocity model for S (sec)
+p_velocity_model_correction: 0.5 # inaccuracy in the velocity model for P (sec)
+s_velocity_model_correction: 0.3 # inaccuracy in the velocity model for S (sec)
 s_pick_estimation_window: [ 10, 200 ] # number of samples before and after the expected S arrival time
-Vp: 5700 # P velocity m/sec
-Vs: 3200 # S velocity m/sec
+Vp: 5700 # P speed m/sec
+Vs: 3200 # S speed m/sec
 max_shift: 800 # maximum shift in samples for the cross correlation
 thresholds: # array of tuples (lower bound magnitude, (freq_min, freq_max), threshold for ΔS-P (sec), minimum number of station), can be as many as necessary
   - [ 0.5, [ [ 1, 35 ], 0.003, 2 ] ]
@@ -22,3 +22,4 @@ cs_coherence_threshold: 0.88
 hypodd_default_time_uncertainty: 0.05 # (sec)
 hypodd_default_horizontal_uncertainty: 0.10 # (km)
 hypodd_default_vertical_uncertainty: 0.30 # (km)
+stations_distance_tolerance: 0.2 # (km)

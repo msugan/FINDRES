@@ -88,21 +88,21 @@ For example the command to analyse the
 data and produce graphics while showing a progress bar is
 
 ```shell
-findres cre.zmap inventory.xml parameters.yaml results --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --graphics_dir=figures --progress
+findres cre.zmap inventory.xml parameters.yaml results_reference --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --graphics_dir=figures --progress
 ```
 
 The command to analyse the
 data without graphics (speeding up the time computation) while showing a progress bar is
 
 ```shell
-findres cre.zmap inventory.xml parameters.yaml results --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
+findres cre.zmap inventory.xml parameters.yaml results_reference --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
 ```
 
 The command to analyse the
 data without graphics (speeding up the time computation) and producing the HypodDD output file while showing a progress bar is
 
 ```shell
-findres cre.zmap inventory.xml parameters.yaml results --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress --hypodd
+findres cre.zmap inventory.xml parameters.yaml results_reference --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress --hypodd
 ```
 
 The Hypodd output file can be used to locate the events. HypoDD software (Waldhauser, F., and W.L. Ellsworth 2000) must be installed.
