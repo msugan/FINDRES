@@ -8,6 +8,7 @@ from functools import lru_cache
 from itertools import combinations
 from pathlib import Path
 
+from multitaper import MTCross
 from obspy import read, read_inventory
 from obspy.taup import TauPyModel
 from obspy.taup.taup_create import build_taup_model
@@ -134,17 +135,17 @@ if __name__ == '__main__':
                 cc_shift_raw, _ = fres.analyze.correlate_waves(trace_1, trace_2, parameters['max_shift'],
                                                                normalize=None)
 
-                pick_p_mean_delay = fres.analyze.relative_pick_time(trace_1.stats, trace_2.stats, pick_p_1, pick_p_2,
-                                                                    cc_shift_raw)
-                pick_s_mean_delay = fres.analyze.relative_pick_time(trace_1.stats, trace_2.stats, pick_s_1, pick_s_2,
-                                                                    cc_shift_raw)
+                pick_p_mean_delay = fres.utils.relative_pick_time(trace_1.stats, trace_2.stats, pick_p_1, pick_p_2,
+                                                                  cc_shift_raw)
+                pick_s_mean_delay = fres.utils.relative_pick_time(trace_1.stats, trace_2.stats, pick_s_1, pick_s_2,
+                                                                  cc_shift_raw)
 
                 fres.utils.sync_traces(trace_1, trace_2, cc_shift_raw)
 
-                trace_1_filtered = fres.analyze.cc_preprocess(trace_1, pick_p_mean_delay, pick_s_mean_delay,
-                                                              freq_range, parameters['full_cc_waveform_window'])
-                trace_2_filtered = fres.analyze.cc_preprocess(trace_2, pick_p_mean_delay, pick_s_mean_delay,
-                                                              freq_range, parameters['full_cc_waveform_window'])
+                trace_1_filtered = fres.utils.cc_preprocess(trace_1, pick_p_mean_delay, pick_s_mean_delay,
+                                                            freq_range, parameters['full_cc_waveform_window'])
+                trace_2_filtered = fres.utils.cc_preprocess(trace_2, pick_p_mean_delay, pick_s_mean_delay,
+                                                            freq_range, parameters['full_cc_waveform_window'])
 
                 cc_shift_filtered, cc_value = fres.analyze.correlate_waves(trace_1_filtered,
                                                                            trace_2_filtered,
@@ -166,41 +167,84 @@ if __name__ == '__main__':
                 starttime = parameters['full_cc_waveform_window'][0] - pick_p_mean_delay
                 fres.utils.sync_traces(trace_1_filtered, trace_2_filtered, cc_shift_filtered)
                 fres.plot.signals(trace_1_filtered, trace_2_filtered,
-                                  event_1.magnitude, event_2.magnitude,
                                   starttime + pick_p_mean_delay - parameters['p_cs_waveform_window'][0],
                                   starttime + pick_p_mean_delay + parameters['p_cs_waveform_window'][1],
                                   starttime + pick_s_mean_delay - parameters['s_cs_waveform_window'][0],
                                   starttime + pick_s_mean_delay + parameters['s_cs_waveform_window'][1],
-                                  cc_value,
-                                  freq_range,
+                                  f"M={event_1.magnitude:.2f}-{event_2.magnitude:.2f} "
+                                  f"BP={freq_range[0]}-{freq_range[1]}Hz CC={cc_value:.2f}",
                                   graphics_dir / f"{event_1.name}_{event_2.name}_{station}_CCZ."
                                                  f"{cli_args.graphics_format}")
 
-            if cli_args.graphics_dir:
-                cs_graphics_path = graphics_dir / f"{event_1.name}_{event_2.name}_{station}" \
-                                                  f"_CSP.{cli_args.graphics_format}"
-            else:
-                cs_graphics_path = None
-            time_delay_p = fres.analyze.cross_spectrum(trace_1, trace_2, pick_p_mean_delay,
-                                                       parameters['p_cs_waveform_window'],
-                                                       freq_range, parameters['max_shift'], parameters,
-                                                       cs_graphics_path)
-            if time_delay_p is None:
-                logging.debug(f"No P-wave coherence found for {station}")
+            try:
+                trace_1p = trace_1.copy()
+                fres.utils.trim_window(trace_1p, pick_p_mean_delay, parameters['p_cs_waveform_window'])
+                trace_2p = trace_2.copy()
+                fres.utils.trim_window(trace_2p, pick_p_mean_delay, parameters['p_cs_waveform_window'])
+
+                p_shift, _ = fres.analyze.correlate_waves(trace_1p, trace_2p, parameters['max_shift'])
+                if p_shift != 0:
+                    fres.utils.sync_traces(trace_1p, trace_2p, p_shift)
+                cross_spectrum = MTCross(trace_1p.data,
+                                         trace_2p.data,
+                                         dt=trace_1p.stats.delta,
+                                         nw=parameters['mt_coherence_time_bandwidth_product'],
+                                         kspec=parameters['mt_coherence_num_taper'],
+                                         nfft=int((trace_1p.stats.npts // 2) + 1),
+                                         iadapt=1)
+                time_delay_p, slope_p, indices_p = fres.analyze.find_delay(cross_spectrum, freq_range, parameters,
+                                                                           trace_1p.stats.delta)
+                time_delay_p += p_shift
+            except fres.analyze.LowCoherenceError as err:
+                logging.debug(f"No P-wave coherence found for {station} "
+                              f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
+                logging.debug("Exception info.", exc_info=err)
+                continue
+            except fres.analyze.EmptyOrConstantTraceError as err:
+                logging.warning(f"Empty or constant trace (P-wave) error for {station} "
+                                f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
+                logging.debug("Exception info.", exc_info=err)
                 continue
 
             if cli_args.graphics_dir:
-                cs_graphics_path = graphics_dir / f"{event_1.name}_{event_2.name}_{station}" \
-                                                  f"_CSS.{cli_args.graphics_format}"
-            else:
-                cs_graphics_path = None
-            time_delay_s = fres.analyze.cross_spectrum(trace_1, trace_2, pick_s_mean_delay,
-                                                       parameters['s_cs_waveform_window'],
-                                                       freq_range, parameters['max_shift'], parameters,
-                                                       cs_graphics_path)
-            if time_delay_s is None:
-                logging.debug(f"No S-wave coherence found for {station}")
+                fres.plot.cross_spectrum(trace_1p, trace_2p, cross_spectrum, slope_p, indices_p, time_delay_p,
+                                         graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
+                                                        f"_CSP.{cli_args.graphics_format}")
+
+            try:
+                trace_1s = trace_1.copy()
+                fres.utils.trim_window(trace_1s, pick_s_mean_delay, parameters['s_cs_waveform_window'])
+                trace_2s = trace_2.copy()
+                fres.utils.trim_window(trace_2s, pick_s_mean_delay, parameters['s_cs_waveform_window'])
+
+                s_shift, _ = fres.analyze.correlate_waves(trace_1s, trace_2s, parameters['max_shift'])
+                if s_shift != 0:
+                    fres.utils.sync_traces(trace_1s, trace_2s, s_shift)
+                cross_spectrum = MTCross(trace_1s.data,
+                                         trace_2s.data,
+                                         dt=trace_1s.stats.delta,
+                                         nw=parameters['mt_coherence_time_bandwidth_product'],
+                                         kspec=parameters['mt_coherence_num_taper'],
+                                         nfft=int((trace_1s.stats.npts // 2) + 1),
+                                         iadapt=1)
+                time_delay_s, slope_s, indices_s = fres.analyze.find_delay(cross_spectrum, freq_range, parameters,
+                                                                           trace_1s.stats.delta)
+                time_delay_s += s_shift
+            except fres.analyze.LowCoherenceError as err:
+                logging.debug(f"No S-wave coherence found for {station} "
+                              f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
+                logging.debug("Exception info.", exc_info=err)
                 continue
+            except fres.analyze.EmptyOrConstantTraceError as err:
+                logging.warning(f"Empty or constant trace (S-wave) error for {station} "
+                                f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
+                logging.debug("Exception info.", exc_info=err)
+                continue
+
+            if cli_args.graphics_dir:
+                fres.plot.cross_spectrum(trace_1s, trace_2s, cross_spectrum, slope_s, indices_s, time_delay_s,
+                                         graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
+                                                        f"_CSP.{cli_args.graphics_format}")
 
             delta_sp = time_delay_s - time_delay_p
             if abs(delta_sp) < delta_sp_threshold:
@@ -212,7 +256,7 @@ if __name__ == '__main__':
                                  delta_sp_threshold,
                                  graphics_dir / f"{event_1.name}-{event_2.name}.{cli_args.graphics_format}")
     if REs:
-        families = fres.analyze.connected_components(REs.keys())
+        families = fres.utils.connected_components(REs.keys())
         logging.info(
             f"RE families: {', '.join(str([catalogue.loc[n, 'name'] for n in family]) for family in families)}")
         cli_args.output.parent.mkdir(parents=True, exist_ok=True)
