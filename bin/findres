@@ -8,6 +8,7 @@ from functools import lru_cache
 from itertools import combinations
 from pathlib import Path
 
+import numpy as np
 from multitaper import MTCross
 from obspy import read, read_inventory
 from obspy.taup import TauPyModel
@@ -192,9 +193,8 @@ if __name__ == '__main__':
                                          kspec=parameters['mt_coherence_num_taper'],
                                          nfft=int((trace_1p.stats.npts // 2) + 1),
                                          iadapt=1)
-                time_delay_p, slope_p, indices_p = fres.analyze.find_delay(cross_spectrum, freq_range, parameters,
-                                                                           trace_1p.stats.delta)
-                time_delay_p += p_shift
+                slope_p, indices_p = fres.analyze.find_slope(cross_spectrum, freq_range, parameters)
+                time_delay_p = p_shift + trace_1p.stats.delta + slope_p / (2 * np.pi)
             except fres.analyze.LowCoherenceError as err:
                 logging.debug(f"No P-wave coherence found for {station} "
                               f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
@@ -227,9 +227,8 @@ if __name__ == '__main__':
                                          kspec=parameters['mt_coherence_num_taper'],
                                          nfft=int((trace_1s.stats.npts // 2) + 1),
                                          iadapt=1)
-                time_delay_s, slope_s, indices_s = fres.analyze.find_delay(cross_spectrum, freq_range, parameters,
-                                                                           trace_1s.stats.delta)
-                time_delay_s += s_shift
+                slope_s, indices_s = fres.analyze.find_slope(cross_spectrum, freq_range, parameters)
+                time_delay_s = s_shift + trace_1s.stats.delta + slope_s / (2 * np.pi)
             except fres.analyze.LowCoherenceError as err:
                 logging.debug(f"No S-wave coherence found for {station} "
                               f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
@@ -244,7 +243,7 @@ if __name__ == '__main__':
             if cli_args.graphics_dir:
                 fres.plot.cross_spectrum(trace_1s, trace_2s, cross_spectrum, slope_s, indices_s, time_delay_s,
                                          graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
-                                                        f"_CSP.{cli_args.graphics_format}")
+                                                        f"_CSS.{cli_args.graphics_format}")
 
             delta_sp = time_delay_s - time_delay_p
             if abs(delta_sp) < delta_sp_threshold:

@@ -25,7 +25,7 @@ def correlate_waves(trace1, trace2, max_shift, **kwargs):
     return shift, cc[argmax]
 
 
-def find_delay(cross_spectrum, frequency_range, params, delta):
+def find_slope(cross_spectrum, frequency_range, params):
     coherence = cross_spectrum.cohe.flatten()
     frequency = cross_spectrum.freq.flatten()
     phase = cross_spectrum.phase.flatten()
@@ -43,6 +43,6 @@ def find_delay(cross_spectrum, frequency_range, params, delta):
             x = frequency[start:stop]
             y = phase[start:stop] * np.pi / 180.0
             slope = np.mean(x * y) / np.mean(x * x)
-            return delta + slope / (2 * np.pi), slope, indices
+            return slope, indices
     else:
         raise LowCoherenceError("No points above coherence threshold.")
