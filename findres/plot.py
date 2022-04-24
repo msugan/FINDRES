@@ -24,7 +24,7 @@ def signals(trace1, trace2, p_wave_window_1, p_wave_window_2, s_wave_window_1, s
     fig.savefig(filename)
 
 
-def cross_spectrum(trace1, trace2, cs, slope, indices, time_delay, filename):
+def cross_spectrum(trace1, trace2, cs, slope, indices, filename):
     fig = figure.Figure()
     waveforms, analysis = fig.subfigures(2, 1)
 
@@ -53,7 +53,7 @@ def cross_spectrum(trace1, trace2, cs, slope, indices, time_delay, filename):
     phase.set_xlabel("Frequency [Hz]")
     phase.set_ylabel("Phase(rad)")
     phase.set_ylim(-3, 3)
-    phase.text(1, 1, f"time delay={time_delay:0.6f}")
+    phase.text(1, 1, f"subsample delay={slope / (2 * np.pi):0.6f}")
     fig.savefig(filename)
 
 
