@@ -97,25 +97,12 @@ if __name__ == '__main__':
             station = trace_1.stats.station
             event_coordinates = (event_1.latitude + event_2.latitude) / 2, \
                                 (event_1.longitude + event_2.longitude) / 2
-
             try:
                 station_coordinates_1 = fres.read.coordinates(inventory, station, event_1.date,
                                                               tol=parameters['stations_distance_tolerance'])
                 pick_p_1, pick_s_1 = fres.read.picks(event_1, event_coordinates, station_coordinates_1, trace_1,
                                                      parameters,
                                                      cli_args.phase_file, cli_args.phase_type, get_travel_times)
-            except fres.read.InventoryLookupError as err:
-                logging.warning(f"Inventory lookup error for {station} "
-                                f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
-                logging.debug("Exception info.", exc_info=err)
-                continue
-            except fres.read.MissingPhaseDataError as err:
-                logging.warning(f"Phases lookup error for {station} "
-                                f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
-                logging.debug("Exception info.", exc_info=err)
-                continue
-
-            try:
                 station_coordinates_2 = fres.read.coordinates(inventory, station, event_2.date,
                                                               tol=parameters['stations_distance_tolerance'])
                 pick_p_2, pick_s_2 = fres.read.picks(event_2, event_coordinates, station_coordinates_2, trace_2,
@@ -133,15 +120,12 @@ if __name__ == '__main__':
                 continue
 
             try:
-                cc_shift_raw, _ = fres.analyze.correlate_waves(trace_1, trace_2, parameters['max_shift'],
-                                                               normalize=None)
+                cc_shift_raw, _ = fres.analyze.correlate_waves(trace_1, trace_2, parameters['max_shift'])
 
                 pick_p_mean_delay = fres.utils.relative_pick_time(trace_1.stats, trace_2.stats, pick_p_1, pick_p_2,
                                                                   cc_shift_raw)
                 pick_s_mean_delay = fres.utils.relative_pick_time(trace_1.stats, trace_2.stats, pick_s_1, pick_s_2,
                                                                   cc_shift_raw)
-
-                fres.utils.sync_traces(trace_1, trace_2, cc_shift_raw)
 
                 trace_1_filtered = fres.utils.cc_preprocess(trace_1, pick_p_mean_delay, pick_s_mean_delay,
                                                             freq_range, parameters['full_cc_waveform_window'])
@@ -151,6 +135,8 @@ if __name__ == '__main__':
                 cc_shift_filtered, cc_value = fres.analyze.correlate_waves(trace_1_filtered,
                                                                            trace_2_filtered,
                                                                            parameters['max_shift'])
+                fres.utils.sync_traces(trace_1, trace_2, cc_shift_filtered)
+
             except fres.analyze.EmptyOrConstantTraceError as err:
                 logging.warning(f"Empty or constant trace error for {station} "
                                 f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
@@ -195,23 +181,11 @@ if __name__ == '__main__':
                                          iadapt=1)
                 slope_p, indices_p = fres.analyze.find_slope(cross_spectrum, freq_range, parameters)
                 time_delay_p = trace_1p.stats.delta * p_shift + slope_p / (2 * np.pi)
-            except fres.analyze.LowCoherenceError as err:
-                logging.debug(f"No P-wave coherence found for {station} "
-                              f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
-                logging.debug("Exception info.", exc_info=err)
-                continue
-            except fres.analyze.EmptyOrConstantTraceError as err:
-                logging.warning(f"Empty or constant trace (P-wave) error for {station} "
-                                f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
-                logging.debug("Exception info.", exc_info=err)
-                continue
+                if cli_args.graphics_dir:
+                    fres.plot.cross_spectrum(trace_1p, trace_2p, cross_spectrum, slope_p, indices_p,
+                                             graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
+                                                            f"_CSP.{cli_args.graphics_format}")
 
-            if cli_args.graphics_dir:
-                fres.plot.cross_spectrum(trace_1p, trace_2p, cross_spectrum, slope_p, indices_p,
-                                         graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
-                                                        f"_CSP.{cli_args.graphics_format}")
-
-            try:
                 trace_1s = trace_1.copy()
                 fres.utils.trim_window(trace_1s, pick_s_mean_delay, parameters['s_cs_waveform_window'])
                 trace_2s = trace_2.copy()
@@ -229,21 +203,21 @@ if __name__ == '__main__':
                                          iadapt=1)
                 slope_s, indices_s = fres.analyze.find_slope(cross_spectrum, freq_range, parameters)
                 time_delay_s = trace_1s.stats.delta * s_shift + slope_s / (2 * np.pi)
+                if cli_args.graphics_dir:
+                    fres.plot.cross_spectrum(trace_1s, trace_2s, cross_spectrum, slope_s, indices_s,
+                                             graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
+                                                            f"_CSS.{cli_args.graphics_format}")
+
             except fres.analyze.LowCoherenceError as err:
-                logging.debug(f"No S-wave coherence found for {station} "
+                logging.debug(f"No coherence found for {station} "
                               f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
                 logging.debug("Exception info.", exc_info=err)
                 continue
             except fres.analyze.EmptyOrConstantTraceError as err:
-                logging.warning(f"Empty or constant trace (S-wave) error for {station} "
+                logging.warning(f"Empty or constant trace error for {station} "
                                 f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
                 logging.debug("Exception info.", exc_info=err)
                 continue
-
-            if cli_args.graphics_dir:
-                fres.plot.cross_spectrum(trace_1s, trace_2s, cross_spectrum, slope_s, indices_s,
-                                         graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
-                                                        f"_CSS.{cli_args.graphics_format}")
 
             delta_sp = time_delay_s - time_delay_p
             if abs(delta_sp) < delta_sp_threshold:
