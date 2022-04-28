@@ -17,11 +17,13 @@ def correlate_waves(trace1, trace2, max_shift, **kwargs):
         raise EmptyOrConstantTraceError("Cannot cross-correlate empty traces.")
     elif trace1.std() == 0 or trace2.std() == 0:
         raise EmptyOrConstantTraceError("Normalized cross-correlation of constant traces is undefined.")
-    data1, data2 = (trace1.data, trace2.data) if trace1.stats.npts >= trace2.stats.npts else (trace2.data, trace1.data)
+    data1, data2, is_swapped = (trace1.data, trace2.data, False) if trace1.stats.npts >= trace2.stats.npts else (trace2.data, trace1.data, True)
     data1 = np.concatenate([np.zeros(max_shift), data1, np.zeros(max_shift)])
     cc = correlate_template(data1, data2, **kwargs)
     argmax = np.argmax(cc)
     shift = argmax - max_shift
+    if is_swapped:
+        shift = -shift
     return shift, cc[argmax]
 
 
