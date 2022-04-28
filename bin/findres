@@ -239,7 +239,7 @@ if __name__ == '__main__':
                     f"{catalogue.loc[a, 'name'], catalogue.loc[b, 'name']}": {
                         station: {'cross-correlation': float(cc), 'delta_sp': float(dsp)}
                         for station, (cc, dsp) in REs.get((a, b)).items()}
-                    for a, b in REs} for n, family in enumerate(families)}
+                    for a, b in REs if a in family or b in family} for n, family in enumerate(families)}
             dump(data, file, Dumper=Dumper)
         if cli_args.hypodd:
             errors = fres.read.errors(catalogue, cli_args.phase_file, cli_args.phase_type)

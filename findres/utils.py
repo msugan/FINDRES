@@ -62,12 +62,12 @@ def estimate_s_pick(trace, pick, distance, vp, vs, window, shift=1, freqmin=1, f
     trace_filt.filter("bandpass", freqmin=freqmin, freqmax=freqmax, corners=2, zerophase=True)
     data_envelope = envelope(trace_filt.data)
     sample_shift = int(shift * trace.stats.sampling_rate)
-    ind = np.argmax(data_envelope) - sample_shift
 
     pick_sample = int((pick - trace.stats.starttime) * trace.stats.sampling_rate)
     thumb_rule_delay_sample = int(distance * (vp - vs) / (vp * vs) * trace.stats.sampling_rate)
     reference_sample = pick_sample + thumb_rule_delay_sample
 
+    ind = np.argmax(data_envelope) - sample_shift
     delta1, delta2 = window
     start = reference_sample - delta1
     stop = reference_sample + delta2

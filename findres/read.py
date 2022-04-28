@@ -1,3 +1,4 @@
+import logging
 from itertools import combinations
 from math import cos, hypot
 
@@ -66,7 +67,11 @@ def _textfile_errors(origin_time, phase_file, columns_delimiters):
         while line := file.readline():
             if line.startswith(origin_time.strftime('%Y%m%d%H%M%S')):
                 for key, (a, b) in columns_delimiters.items():
-                    error_values[key] = _read_float(line, a, b)
+                    try:
+                        error_values[key] = _read_float(line, a, b)
+                    except ValueError as err:
+                        logging.warning("Found invalid string.", exc_info=err)
+                        error_values[key] = None
     return error_values
 
 
