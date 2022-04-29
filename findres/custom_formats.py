@@ -33,4 +33,31 @@ def _rise_errors(origin_time, phase_file):
     return {}
 
 
-registry = {'rise_custom': {'phases': _rise_phases, 'errors': _rise_errors}}
+def _hyposynth_phases(origin_time, station, phase_file):
+    with phase_file.open('r') as file:
+        lines = []
+        start_section = False
+        while line := file.readline():
+            if line.startswith(origin_time.strftime('%Y%m%d%H%M%S')):
+                start_section = True
+                continue
+            if start_section and line.startswith(30 * " "):
+                break
+            if start_section:
+                lines.append(line)
+    p_pick, s_pick = None, None
+    for line in lines:
+        if line.startswith(station) and int(line[16]) < 4:
+            if not line[31:39].isspace():
+                p_pick = UTCDateTime.strptime(line[17:38], '%Y%m%d%H%M %S%f')
+            if not line[43:51].isspace():
+                s_pick = UTCDateTime.strptime(line[17:30] + line[42:50], '%Y%m%d%H%M %S%f')
+    return p_pick, s_pick
+
+
+def _hyposynth_errors(origin_time, phase_file):
+    return {}
+
+
+registry = {'rise_custom': {'phases': _rise_phases, 'errors': _rise_errors},
+            'hyposynth': {'phases': _hyposynth_phases, 'errors': _hyposynth_errors}}

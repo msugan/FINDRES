@@ -95,6 +95,7 @@ if __name__ == '__main__':
                                      leave=False,
                                      disable=not cli_args.progress):
             station = trace_1.stats.station
+            network = trace_1.stats.network
             event_coordinates = (event_1.latitude + event_2.latitude) / 2, \
                                 (event_1.longitude + event_2.longitude) / 2
             try:
@@ -180,7 +181,7 @@ if __name__ == '__main__':
                                          nfft=int((trace_1p.stats.npts // 2) + 1),
                                          iadapt=1)
                 slope_p, indices_p = fres.analyze.find_slope(cross_spectrum, freq_range, parameters)
-                time_delay_p = trace_1p.stats.delta * p_shift + slope_p / (2 * np.pi)
+                time_delay_p = trace_1p.stats.delta * (p_shift + cc_shift_filtered) - slope_p / (2 * np.pi)
                 if cli_args.graphics_dir:
                     fres.plot.cross_spectrum(trace_1p, trace_2p, cross_spectrum, slope_p, indices_p,
                                              graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
@@ -202,7 +203,7 @@ if __name__ == '__main__':
                                          nfft=int((trace_1s.stats.npts // 2) + 1),
                                          iadapt=1)
                 slope_s, indices_s = fres.analyze.find_slope(cross_spectrum, freq_range, parameters)
-                time_delay_s = trace_1s.stats.delta * s_shift + slope_s / (2 * np.pi)
+                time_delay_s = trace_1s.stats.delta * (s_shift + cc_shift_filtered) - slope_s / (2 * np.pi)
                 if cli_args.graphics_dir:
                     fres.plot.cross_spectrum(trace_1s, trace_2s, cross_spectrum, slope_s, indices_s,
                                              graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
