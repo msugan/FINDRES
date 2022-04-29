@@ -63,7 +63,7 @@ def similarity(ev1, ev2, data, inventory, cc_threshold, delta_threshold, filenam
     xs = np.fromiter((x for x, _ in data[(ev1.Index, ev2.Index)].values()), dtype=np.float)
     ys = np.fromiter((y for _, y in data[(ev1.Index, ev2.Index)].values()), dtype=np.float)
     zs = 1e-3 * np.fromiter(map(lambda s: gps2dist_azimuth(event_latitude, event_longitude,
-                                                           *coordinates(inventory, s, ev1.date))[0],
+                                                           *coordinates(inventory, s[0], s[1], ev1.date))[0],
                                 data[(ev1.Index, ev2.Index)]),
                             dtype=np.float)
     fig = figure.Figure()

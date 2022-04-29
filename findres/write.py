@@ -17,10 +17,10 @@ def dump_hypodd(families, catalogue, errors, repeaters, parameters, output_dir):
                 for (t1, t2) in combinations(family, 2):
                     if repeaters[(t1, t2)]:
                         file.write(f"#    {catalogue.loc[t1, 'name']}    {catalogue.loc[t2, 'name']}     0.0\n")
-                        for station in sorted(repeaters[(t1, t2)]):
-                            cc, delta_sp = repeaters[(t1, t2)][station]
+                        for (network, station) in sorted(repeaters[(t1, t2)]):
+                            cc, delta_sp = repeaters[(t1, t2)][(network, station)]
                             delta_v = parameters['Vp'] - parameters['Vs']
                             ttp = parameters['Vs'] * delta_sp / delta_v
-                            file.write(f"{station}     {ttp: 10.9f}    {cc:.2f}    P\n")
+                            file.write(f"{network + '.' + station}     {ttp: 10.9f}    {cc:.2f}    P\n")
                             tts = -parameters['Vp'] * delta_sp / delta_v
-                            file.write(f"{station}     {tts: 10.9f}    {cc:.2f}    S\n")
+                            file.write(f"{network + '.' + station}     {tts: 10.9f}    {cc:.2f}    S\n")

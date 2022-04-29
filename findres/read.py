@@ -115,9 +115,9 @@ def _read_float(whole_str, start, end, decimals=2):
     return float(float_str)
 
 
-def coordinates(inventory, station_code, time, tol=0.2):
+def coordinates(inventory, network_code, station_code, time, tol=0.2):
     stations = []
-    for network in inventory.select(station=station_code, time=time):
+    for network in inventory.select(network=network_code, station=station_code, time=time):
         for station in network:
             stations.append(station)
     if stations:

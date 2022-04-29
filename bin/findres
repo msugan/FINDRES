@@ -99,23 +99,23 @@ if __name__ == '__main__':
             event_coordinates = (event_1.latitude + event_2.latitude) / 2, \
                                 (event_1.longitude + event_2.longitude) / 2
             try:
-                station_coordinates_1 = fres.read.coordinates(inventory, station, event_1.date,
+                station_coordinates_1 = fres.read.coordinates(inventory, network, station, event_1.date,
                                                               tol=parameters['stations_distance_tolerance'])
                 pick_p_1, pick_s_1 = fres.read.picks(event_1, event_coordinates, station_coordinates_1, trace_1,
                                                      parameters,
                                                      cli_args.phase_file, cli_args.phase_type, get_travel_times)
-                station_coordinates_2 = fres.read.coordinates(inventory, station, event_2.date,
+                station_coordinates_2 = fres.read.coordinates(inventory, network, station, event_2.date,
                                                               tol=parameters['stations_distance_tolerance'])
                 pick_p_2, pick_s_2 = fres.read.picks(event_2, event_coordinates, station_coordinates_2, trace_2,
                                                      parameters,
                                                      cli_args.phase_file, cli_args.phase_type, get_travel_times)
             except fres.read.InventoryLookupError as err:
-                logging.warning(f"Inventory lookup error for {station} "
+                logging.warning(f"Inventory lookup error for {network + '.' + station} "
                                 f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
                 logging.debug("Exception info.", exc_info=err)
                 continue
             except fres.read.MissingPhaseDataError as err:
-                logging.warning(f"Phases lookup error for {station} "
+                logging.warning(f"Phases lookup error for {network + '.' + station} "
                                 f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
                 logging.debug("Exception info.", exc_info=err)
                 continue
@@ -139,13 +139,13 @@ if __name__ == '__main__':
                 fres.utils.sync_traces(trace_1, trace_2, cc_shift_filtered)
 
             except fres.analyze.EmptyOrConstantTraceError as err:
-                logging.warning(f"Empty or constant trace error for {station} "
+                logging.warning(f"Empty or constant trace error for {network + '.' + station} "
                                 f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
                 logging.debug("Exception info.", exc_info=err)
                 continue
 
             if cc_value < parameters['cross-correlation_threshold']:
-                logging.debug(f"Cross-correlation {cc_value} lower than threshold for {station}")
+                logging.debug(f"Cross-correlation {cc_value} lower than threshold for {network + '.' + station}")
                 continue
 
             if cli_args.graphics_dir:
@@ -161,7 +161,7 @@ if __name__ == '__main__':
                                   starttime + pick_s_mean_delay + parameters['s_cs_waveform_window'][1],
                                   f"M={event_1.magnitude:.2f}-{event_2.magnitude:.2f} "
                                   f"BP={freq_range[0]}-{freq_range[1]}Hz CC={cc_value:.2f}",
-                                  graphics_dir / f"{event_1.name}_{event_2.name}_{station}_CCZ."
+                                  graphics_dir / f"{event_1.name}_{event_2.name}_{network + '.' + station}_CCZ."
                                                  f"{cli_args.graphics_format}")
 
             try:
@@ -184,7 +184,7 @@ if __name__ == '__main__':
                 time_delay_p = trace_1p.stats.delta * (p_shift + cc_shift_filtered) - slope_p / (2 * np.pi)
                 if cli_args.graphics_dir:
                     fres.plot.cross_spectrum(trace_1p, trace_2p, cross_spectrum, slope_p, indices_p,
-                                             graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
+                                             graphics_dir / f"{event_1.name}_{event_2.name}_{network + '.' + station}"
                                                             f"_CSP.{cli_args.graphics_format}")
 
                 trace_1s = trace_1.copy()
@@ -206,23 +206,23 @@ if __name__ == '__main__':
                 time_delay_s = trace_1s.stats.delta * (s_shift + cc_shift_filtered) - slope_s / (2 * np.pi)
                 if cli_args.graphics_dir:
                     fres.plot.cross_spectrum(trace_1s, trace_2s, cross_spectrum, slope_s, indices_s,
-                                             graphics_dir / f"{event_1.name}_{event_2.name}_{station}"
+                                             graphics_dir / f"{event_1.name}_{event_2.name}_{network + '.' + station}"
                                                             f"_CSS.{cli_args.graphics_format}")
 
             except fres.analyze.LowCoherenceError as err:
-                logging.debug(f"No coherence found for {station} "
+                logging.debug(f"No coherence found for {network + '.' + station} "
                               f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
                 logging.debug("Exception info.", exc_info=err)
                 continue
             except fres.analyze.EmptyOrConstantTraceError as err:
-                logging.warning(f"Empty or constant trace error for {station} "
+                logging.warning(f"Empty or constant trace error for {network + '.' + station} "
                                 f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
                 logging.debug("Exception info.", exc_info=err)
                 continue
 
             delta_sp = time_delay_s - time_delay_p
             if abs(delta_sp) < delta_sp_threshold:
-                REs[(event_1.Index, event_2.Index)][station] = (cc_value, delta_sp)
+                REs[(event_1.Index, event_2.Index)][(network, station)] = (cc_value, delta_sp)
         if len(REs[(event_1.Index, event_2.Index)]) < min_stations:
             del REs[(event_1.Index, event_2.Index)]
         elif cli_args.graphics_dir:
@@ -238,8 +238,8 @@ if __name__ == '__main__':
             data = {
                 f"{n, list(map(lambda i: catalogue.loc[i, 'name'], family))}": {
                     f"{catalogue.loc[a, 'name'], catalogue.loc[b, 'name']}": {
-                        station: {'cross-correlation': float(cc), 'delta_sp': float(dsp)}
-                        for station, (cc, dsp) in REs.get((a, b)).items()}
+                        f"{network + '.' + station}": {'cross-correlation': float(cc), 'delta_sp': float(dsp)}
+                        for (network, station), (cc, dsp) in REs.get((a, b)).items()}
                     for a, b in REs if a in family or b in family} for n, family in enumerate(families)}
             dump(data, file, Dumper=Dumper)
         if cli_args.hypodd:
