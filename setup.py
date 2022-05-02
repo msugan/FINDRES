@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="findres",
-    version="0.1.0",
+    version="0.2.0",
     author="Monica Sugan, Stefano Campanella",
     author_email="msugan@inogs.it, scampanella@inogs.it",
     description="Repeating earthquake discovery using cross-correlation and differential arrival times",
@@ -26,7 +26,8 @@ setuptools.setup(
         'pandas',
         'tqdm',
         'obspy',
-        'pyyaml'
+        'pyyaml',
+        'multitaper'
     ],
     python_requires='~=3.8',
 )
