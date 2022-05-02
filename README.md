@@ -28,29 +28,35 @@ Python installed to run the program (version 3.8 or more) is required [http://py
 The package has few dependencies; the recommended way of installing them is via the Conda package manager. You can
 create a test environment using
 
-```shell
-conda create -n findres-test python=3.8 numpy=1.21 scipy scikit-learn pandas tqdm pyyaml obspy mtspec -c conda-forge
+```console
+foo@bar ~ % conda create -n findres-test python=3.8 numpy=1.21 pandas tqdm pyyaml obspy multitaper -c conda-forge -c gprieto
 ```
 
 Remember to activate the environment with
 
-```shell
-conda activate findres-test
+```console
+foo@bar ~ % conda activate findres-test
 ```
 
 The package is registered on PyPi, you can install it using `pip`
 
-```shell
-pip install findres
+```console
+(findres-test) foo@bar ~ % pip install findres
 ```
 
-After that, you'll have the `findres` script in your path.
+Otherwise, you can download or clone this repository in a specific path, then add `FINDRES/bin` to `PATH` and `FINDRES` to `PYTHONPATH`. This is useful if you want to modify the code, work with your own version of the code, get the latest one, or to extend [custom_formats.py](findres/custom_formats.py) to support your own formats. For example, if the repository is located at `/home/foo/dev/FINDRES` you can append the new paths to the relevant environment variables with
 
-```shell
-# findres --help
+```console
+(findres-test) foo@bar ~ % export PATH=$PATH:/home/foo/dev/FINDRES/bin
+(findres-test) foo@bar ~ % export PYTHONPATH=$PYTHONPATH:/home/foo/dev/FINDRES
+```
 
-usage: ./bin/findres [-h] [--phase_file PHASE_FILE] [--phase_type {hypoinv,nll,quakeml,hypoel}] [--taup_model TAUP_MODEL] [--rebuild_model]
-                     [--graphics_dir GRAPHICS_DIR] [--graphics_format GRAPHICS_FORMAT] [--hypodd] [--stop] [--log LOG] [--progress]
+After that, you'll have the `findres` script in your path (you can check using `which` that you are calling the script located at the right path).
+
+```console
+(findres-test) foo@bar ~ % findres --help
+usage: ./bin/findres [-h] [--phase_file PHASE_FILE] [--phase_type {hypoinv,nll,quakeml,hypoel,rise_custom,hyposynth}] [--taup_model TAUP_MODEL] [--rebuild_model] [--graphics_dir GRAPHICS_DIR]
+                     [--graphics_format GRAPHICS_FORMAT] [--hypodd] [--include INCLUDE] [--log LOG] [--progress]
                      catalogue inventory parameters output
 
 positional arguments:
@@ -63,7 +69,7 @@ optional arguments:
   -h, --help            show this help message and exit
   --phase_file PHASE_FILE
                         Catalogue containing the phase picking and other information if available (default: None)
-  --phase_type {hypoinv,nll,quakeml,hypoel}
+  --phase_type {hypoinv,nll,quakeml,hypoel,rise_custom,hyposynth}
                         Type of PHASE_FILE (default: None)
   --taup_model TAUP_MODEL
                         Velocity model file without extension (assumed to be .tvel) if available (default: None)
@@ -73,49 +79,48 @@ optional arguments:
   --graphics_format GRAPHICS_FORMAT
                         Graphics format, must be one of the extensions recognized by matplotlib (default: pdf)
   --hypodd              Whether to output hypodd input files (default: False)
-  --stop                Stop if exceptions are raised during the analysis, otherwise skip to the next event station (default: False)
-  --log LOG             Log level (default: info)
+  --include INCLUDE     Include only the listed events from catalogue (default: None)
+  --log LOG             Log level (default: warning)
   --progress            Show progress bar (default: False)
 ```
 
 You can run a test using the [data provided in this repository](data/california) and accessing the following folder 
 
-```shell
-cd data/california
+```console
+(findres-test) foo@bar ~ % cd /home/foo/dev/FINDRES/data/california
 ```
 
 For example the command to analyse the
 data and produce graphics while showing a progress bar is
 
-```shell
-findres cre.zmap inventory.xml parameters.yaml results_reference --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --graphics_dir=figures --progress
+```console
+(findres-test) foo@bar california % findres cre.zmap inventory.xml parameters.yaml results_reference --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --graphics_dir=figures --progress
 ```
 
 The command to analyse the
 data without graphics (speeding up the time computation) while showing a progress bar is
 
-```shell
-findres cre.zmap inventory.xml parameters.yaml results_reference --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
+```console
+(findres-test) foo@bar california % findres cre.zmap inventory.xml parameters.yaml results_reference --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress
 ```
 
 The command to analyse the
 data without graphics (speeding up the time computation) and producing the HypodDD output file while showing a progress bar is
 
-```shell
-findres cre.zmap inventory.xml parameters.yaml results_reference --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress --hypodd
+```console
+(findres-test) foo@bar california % findres cre.zmap inventory.xml parameters.yaml results_reference --phase_file=phases_hypoinv.txt --phase_type=hypoinv --taup_model=ncmodel --progress --hypodd
 ```
 
 The Hypodd output file can be used to locate the events. HypoDD software (Waldhauser, F., and W.L. Ellsworth 2000) must be installed.
 To run an exmaple you can accesss the following directory:
 
-```shell
-cd /data/california/Hypodd_svd_1_RES
+```console
+(findres-test) foo@bar california % cd Hypodd_svd_1_RES
 ```
-
 and type:
 
-```shell
-HypoDD hypoDD.inp
+```console
+(findres-test) foo@bar Hypodd_svd_1_RES % HypoDD hypoDD.inp
 ```
 
 The numerical parameters are set using the `parameters.yaml` file. The name of the fields are self-explicative and more
