@@ -53,7 +53,7 @@ def cross_spectrum(trace1, trace2, cs, slope, indices, textline, filename):
     phase.plot(x[start:stop], z[start:stop], "rx", label="used data", markersize=4)
     phase.plot(x[start:stop], slope * x[start:stop], "g", label="fitted line")
     phase.set_xlabel("Frequency [Hz]")
-    phase.set_ylabel("Phase(rad)")
+    phase.set_ylabel("Phase [rad]")
     phase.set_ylim(-3, 3)
     phase.text(1, 1, textline)
     fig.savefig(filename)
