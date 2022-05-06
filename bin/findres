@@ -181,10 +181,10 @@ if __name__ == '__main__':
                                          nfft=int((trace_1p.stats.npts // 2) + 1),
                                          iadapt=1)
                 slope_p, indices_p = fres.analyze.find_slope(cross_spectrum, freq_range, parameters)
-                time_delay_p = trace_1p.stats.delta * (p_shift + cc_shift) - slope_p / (2 * np.pi)
+                time_delay_p = slope_p / (2 * np.pi) - trace_1p.stats.delta * (p_shift + cc_shift)
                 if cli_args.graphics_dir:
                     fres.plot.cross_spectrum(trace_1p, trace_2p, cross_spectrum, slope_p, indices_p,
-                                             f"delay={time_delay_p:0.6f} (subsample={-slope_p / (2 * np.pi):0.6f})",
+                                             f"delay={time_delay_p:0.6f} (subsample={slope_p / (2 * np.pi):0.6f})",
                                              graphics_dir / f"{event_1.name}_{event_2.name}_{network + '.' + station}"
                                                             f"_CSP.{cli_args.graphics_format}")
 
@@ -204,10 +204,10 @@ if __name__ == '__main__':
                                          nfft=int((trace_1s.stats.npts // 2) + 1),
                                          iadapt=1)
                 slope_s, indices_s = fres.analyze.find_slope(cross_spectrum, freq_range, parameters)
-                time_delay_s = trace_1s.stats.delta * (s_shift + cc_shift) - slope_s / (2 * np.pi)
+                time_delay_s = slope_s / (2 * np.pi) - trace_1s.stats.delta * (s_shift + cc_shift)
                 if cli_args.graphics_dir:
                     fres.plot.cross_spectrum(trace_1s, trace_2s, cross_spectrum, slope_s, indices_s,
-                                             f"delay={time_delay_s:0.6f} (subsample={-slope_s / (2 * np.pi):0.6f})",
+                                             f"delay={time_delay_s:0.6f} (subsample={slope_s / (2 * np.pi):0.6f})",
                                              graphics_dir / f"{event_1.name}_{event_2.name}_{network + '.' + station}"
                                                             f"_CSS.{cli_args.graphics_format}")
 
