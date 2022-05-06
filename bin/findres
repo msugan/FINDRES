@@ -133,10 +133,10 @@ if __name__ == '__main__':
                 trace_2_filtered = fres.utils.cc_preprocess(trace_2, pick_p_mean_delay, pick_s_mean_delay,
                                                             freq_range, parameters['full_cc_waveform_window'])
 
-                cc_shift_filtered, cc_value = fres.analyze.correlate_waves(trace_1_filtered,
-                                                                           trace_2_filtered,
-                                                                           parameters['max_shift'])
-                fres.utils.sync_traces(trace_1, trace_2, cc_shift_filtered)
+                cc_shift, cc_value = fres.analyze.correlate_waves(trace_1_filtered,
+                                                                  trace_2_filtered,
+                                                                  parameters['max_shift'])
+                fres.utils.sync_traces(trace_1, trace_2, cc_shift)
 
             except fres.analyze.EmptyOrConstantTraceError as err:
                 logging.warning(f"Empty or constant trace error for {network + '.' + station} "
@@ -153,7 +153,7 @@ if __name__ == '__main__':
                     os.makedirs(graphics_dir)
 
                 starttime = parameters['full_cc_waveform_window'][0] - pick_p_mean_delay
-                fres.utils.sync_traces(trace_1_filtered, trace_2_filtered, cc_shift_filtered)
+                fres.utils.sync_traces(trace_1_filtered, trace_2_filtered, cc_shift)
                 fres.plot.signals(trace_1_filtered, trace_2_filtered,
                                   starttime + pick_p_mean_delay - parameters['p_cs_waveform_window'][0],
                                   starttime + pick_p_mean_delay + parameters['p_cs_waveform_window'][1],
@@ -181,9 +181,10 @@ if __name__ == '__main__':
                                          nfft=int((trace_1p.stats.npts // 2) + 1),
                                          iadapt=1)
                 slope_p, indices_p = fres.analyze.find_slope(cross_spectrum, freq_range, parameters)
-                time_delay_p = trace_1p.stats.delta * (p_shift + cc_shift_filtered) - slope_p / (2 * np.pi)
+                time_delay_p = trace_1p.stats.delta * (p_shift + cc_shift) - slope_p / (2 * np.pi)
                 if cli_args.graphics_dir:
                     fres.plot.cross_spectrum(trace_1p, trace_2p, cross_spectrum, slope_p, indices_p,
+                                             f"delay={time_delay_p:0.6f} (subsample={-slope_p / (2 * np.pi):0.6f})",
                                              graphics_dir / f"{event_1.name}_{event_2.name}_{network + '.' + station}"
                                                             f"_CSP.{cli_args.graphics_format}")
 
@@ -203,9 +204,10 @@ if __name__ == '__main__':
                                          nfft=int((trace_1s.stats.npts // 2) + 1),
                                          iadapt=1)
                 slope_s, indices_s = fres.analyze.find_slope(cross_spectrum, freq_range, parameters)
-                time_delay_s = trace_1s.stats.delta * (s_shift + cc_shift_filtered) - slope_s / (2 * np.pi)
+                time_delay_s = trace_1s.stats.delta * (s_shift + cc_shift) - slope_s / (2 * np.pi)
                 if cli_args.graphics_dir:
                     fres.plot.cross_spectrum(trace_1s, trace_2s, cross_spectrum, slope_s, indices_s,
+                                             f"delay={time_delay_s:0.6f} (subsample={-slope_s / (2 * np.pi):0.6f})",
                                              graphics_dir / f"{event_1.name}_{event_2.name}_{network + '.' + station}"
                                                             f"_CSS.{cli_args.graphics_format}")
 
