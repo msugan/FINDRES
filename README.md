@@ -29,7 +29,7 @@ The package has few dependencies; the recommended way of installing them is via 
 create a test environment using
 
 ```console
-foo@bar ~ % conda create -n findres-test python=3.8 numpy=1.21 pandas tqdm pyyaml obspy multitaper -c conda-forge -c gprieto
+foo@bar ~ % conda create -n findres-test python=3.8 numpy=1.21 pandas tqdm pyyaml obspy -c conda-forge
 ```
 
 Remember to activate the environment with
@@ -38,7 +38,13 @@ Remember to activate the environment with
 foo@bar ~ % conda activate findres-test
 ```
 
-The package is registered on PyPi, you can install it using `pip`
+The package multitaper is required, you can install it using `pip`
+
+```console
+foo@bar ~ % pip install multitaper
+```
+
+The package FINDRES is registered on PyPi, you can install it using `pip`
 
 ```console
 (findres-test) foo@bar ~ % pip install findres
