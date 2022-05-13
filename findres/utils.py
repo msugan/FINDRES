@@ -32,10 +32,10 @@ def cc_preprocess(trace, pick_p_mean_delay, pick_s_mean_delay, freq_range, full_
     new_trace = trace.copy()
     starttime = trace.stats.starttime + pick_p_mean_delay - full_waveform_window[0]
     endtime = trace.stats.starttime + pick_s_mean_delay + full_waveform_window[1]
-    new_trace.trim(starttime=starttime, endtime=endtime)
     new_trace.detrend("constant")
     new_trace.filter("bandpass", freqmin=freq_range[0], freqmax=freq_range[1], corners=2, zerophase=True)
     new_trace.taper(taper_length)
+    new_trace.trim(starttime=starttime, endtime=endtime)
     return new_trace
 
 
