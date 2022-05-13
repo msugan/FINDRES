@@ -24,15 +24,18 @@ def signals(trace1, trace2, p_wave_window_1, p_wave_window_2, s_wave_window_1, s
     fig.savefig(filename)
 
 
-def cross_spectrum(trace1, trace2, cs, slope, indices, filename):
-    fig = figure.Figure()
+def cross_spectrum(trace1, trace2, cs, slope, indices, textline, filename):
+    fig = figure.Figure(constrained_layout=True)
     waveforms, analysis = fig.subfigures(2, 1)
 
     waveform1, waveform2 = waveforms.subplots(2, 1, sharex=True)
-    waveform1.plot(np.arange(trace1.stats.npts) * trace1.stats.delta, trace1.data / np.abs(trace1.max()), linewidth=1)
+    data1 = trace1.data
+    data1 = 2 * (data1 - data1.min()) / (data1.max() - data1.min()) - 1
+    waveform1.plot(np.arange(trace1.stats.npts) * trace1.stats.delta, data1, linewidth=1)
     waveform1.set_ylabel("Amplitude")
-    waveform1.set_xlabel("Time [sec]")
-    waveform2.plot(np.arange(trace2.stats.npts) * trace2.stats.delta, trace2.data / np.abs(trace2.max()), linewidth=1)
+    data2 = trace2.data
+    data2 = 2 * (data2 - data2.min()) / (data2.max() - data2.min()) - 1
+    waveform2.plot(np.arange(trace2.stats.npts) * trace2.stats.delta, data2, linewidth=1)
     waveform2.set_ylabel("Amplitude")
     waveform2.set_xlabel("Time [sec]")
 
@@ -44,16 +47,15 @@ def cross_spectrum(trace1, trace2, cs, slope, indices, filename):
     start, stop = indices
     coherence.plot(x[positive_freq_indices], y[positive_freq_indices], linewidth=1)
     coherence.plot(x[start:stop], y[start:stop], "rx", label="used data", markersize=4)
-    coherence.set_xlabel("Frequency [Hz]")
     coherence.set_ylabel("Coherency")
     coherence.set_ylim(0, 1.1)
     phase.plot(x[positive_freq_indices], z[positive_freq_indices], linewidth=1)
     phase.plot(x[start:stop], z[start:stop], "rx", label="used data", markersize=4)
     phase.plot(x[start:stop], slope * x[start:stop], "g", label="fitted line")
     phase.set_xlabel("Frequency [Hz]")
-    phase.set_ylabel("Phase(rad)")
+    phase.set_ylabel("Phase [rad]")
     phase.set_ylim(-3, 3)
-    phase.text(1, 1, f"subsample delay={slope / (2 * np.pi):0.6f}")
+    phase.text(1, 1, textline)
     fig.savefig(filename)
 
 
