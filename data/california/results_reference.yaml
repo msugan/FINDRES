@@ -1,0 +1,263 @@
+(0, [122842, 484038, 21442564, 72388871]):
+  (122842, 21442564):
+    NC.GCW:
+      cross-correlation: 0.9028266533832561
+      delta_sp: 0.001158348236809742
+    NC.GDC:
+      cross-correlation: 0.9463291311699252
+      delta_sp: 0.00340831989097945
+    NC.GGP:
+      cross-correlation: 0.956927523714178
+      delta_sp: 0.0029917783856939495
+    NC.GHC:
+      cross-correlation: 0.9405177104354772
+      delta_sp: 0.0005643720660417906
+    NC.GHG:
+      cross-correlation: 0.9809808889200463
+      delta_sp: -0.0020332213368545737
+    NC.GHL:
+      cross-correlation: 0.9572984357728449
+      delta_sp: -0.0009960312631786122
+    NC.GSN:
+      cross-correlation: 0.9690890707189979
+      delta_sp: -0.0002394471506946272
+    NC.GSS:
+      cross-correlation: 0.9510710188097626
+      delta_sp: 0.0012982930768452444
+    NC.NMC:
+      cross-correlation: 0.9570802721077947
+      delta_sp: -0.0014376366544027047
+  (122842, 484038):
+    NC.GAC:
+      cross-correlation: 0.9462182654842538
+      delta_sp: -0.0034557599231525016
+    NC.GCV:
+      cross-correlation: 0.9631974914635101
+      delta_sp: 0.0022105732765052566
+    NC.GCW:
+      cross-correlation: 0.9576889356272067
+      delta_sp: -0.001430022762582972
+    NC.GDC:
+      cross-correlation: 0.9628924342366799
+      delta_sp: -5.341264468122775e-05
+    NC.GGP:
+      cross-correlation: 0.9782535306944623
+      delta_sp: 0.0016849997619141632
+    NC.GHC:
+      cross-correlation: 0.9629560303922128
+      delta_sp: -0.002934956396019983
+    NC.GHG:
+      cross-correlation: 0.98689100300909
+      delta_sp: -0.002515753658705211
+    NC.GHL:
+      cross-correlation: 0.951257965738277
+      delta_sp: 0.00045289897857409
+    NC.GHV:
+      cross-correlation: 0.9683677033869112
+      delta_sp: -8.577521641323083e-05
+    NC.GMC:
+      cross-correlation: 0.9384252854504016
+      delta_sp: -0.0010998032980776284
+    NC.GMK:
+      cross-correlation: 0.9648702642991751
+      delta_sp: 0.001022645220832119
+    NC.GSN:
+      cross-correlation: 0.9712628214280384
+      delta_sp: -0.0008460330481567246
+    NC.GSS:
+      cross-correlation: 0.9427598353977431
+      delta_sp: 0.0006401928957885383
+    NC.NMC:
+      cross-correlation: 0.9554452457999961
+      delta_sp: -0.0010383620822640438
+  (122842, 72388871):
+    NC.GAC:
+      cross-correlation: 0.9227606286333094
+      delta_sp: -0.002478657627545955
+    NC.GDC:
+      cross-correlation: 0.9620202657335261
+      delta_sp: 0.0007483045633797647
+    NC.GHL:
+      cross-correlation: 0.9386103778208632
+      delta_sp: -0.0025328211207275575
+    NC.GSN:
+      cross-correlation: 0.9506676249009507
+      delta_sp: 0.0013946124943966243
+    NC.NMC:
+      cross-correlation: 0.9768559491522308
+      delta_sp: -0.00010700225268729657
+  (21442564, 72388871):
+    NC.GBG:
+      cross-correlation: 0.92109005608598
+      delta_sp: 0.0025751720828752454
+    NC.GCVB:
+      cross-correlation: 0.9913412732153144
+      delta_sp: 0.0008036089759159877
+    NC.GDC:
+      cross-correlation: 0.967534261175561
+      delta_sp: -0.0017660296666225442
+    NC.GGU:
+      cross-correlation: 0.9714597429265374
+      delta_sp: -0.0011725617759949444
+    NC.GHL:
+      cross-correlation: 0.9889151398499252
+      delta_sp: -0.0007496606212746004
+    NC.GSN:
+      cross-correlation: 0.9853443144740266
+      delta_sp: 0.0012513469696460548
+    NC.GWR:
+      cross-correlation: 0.989551674079386
+      delta_sp: 0.000477599669270308
+    NC.NEA:
+      cross-correlation: 0.9342291465793541
+      delta_sp: 0.002742691222651847
+    NC.NFR:
+      cross-correlation: 0.9714965961107364
+      delta_sp: -0.0003333977302454848
+    NC.NMC:
+      cross-correlation: 0.9827534508843692
+      delta_sp: 0.0026530942122378574
+    NC.NMW:
+      cross-correlation: 0.9878721515040313
+      delta_sp: -0.002579198049582735
+  (484038, 21442564):
+    NC.GAX:
+      cross-correlation: 0.9694270957342276
+      delta_sp: 0.0013536807359016412
+    NC.GDC:
+      cross-correlation: 0.9496444416924943
+      delta_sp: 0.006849361907470791
+    NC.GGP:
+      cross-correlation: 0.9623057703903763
+      delta_sp: -0.0023214247941188704
+    NC.GHC:
+      cross-correlation: 0.9694756946424019
+      delta_sp: 0.0030356725309782923
+    NC.GHG:
+      cross-correlation: 0.9741961760769984
+      delta_sp: -0.0030526926357758583
+    NC.GHL:
+      cross-correlation: 0.9854041174823772
+      delta_sp: -0.0007213150860699014
+    NC.GPM:
+      cross-correlation: 0.9437777016318349
+      delta_sp: -2.843035453267695e-05
+    NC.GSG:
+      cross-correlation: 0.9445404111244032
+      delta_sp: 0.004382494370000212
+    NC.GSN:
+      cross-correlation: 0.9928575310545479
+      delta_sp: -0.00044651998426301076
+    NC.GSS:
+      cross-correlation: 0.9789271900902133
+      delta_sp: 0.0023764560181869787
+    NC.GWR:
+      cross-correlation: 0.9286482797114369
+      delta_sp: -0.003248541088664486
+    NC.NMC:
+      cross-correlation: 0.9536118603429301
+      delta_sp: -0.002355357855154505
+  (484038, 72388871):
+    NC.GAC:
+      cross-correlation: 0.9702174098137665
+      delta_sp: -0.0024345446115898173
+    NC.GDC:
+      cross-correlation: 0.9340809948793969
+      delta_sp: 0.004401995119965488
+    NC.GHL:
+      cross-correlation: 0.9794284184837463
+      delta_sp: -0.00035147155056286516
+    NC.GHO:
+      cross-correlation: 0.9733142881557225
+      delta_sp: 0.0005253302327447723
+    NC.GSG:
+      cross-correlation: 0.9470054665447447
+      delta_sp: -0.0039168590939756415
+    NC.GSN:
+      cross-correlation: 0.9861907698647052
+      delta_sp: 0.0009018564562943976
+    NC.GWR:
+      cross-correlation: 0.9388655194589619
+      delta_sp: -0.00044829696190371027
+    NC.NMC:
+      cross-correlation: 0.9750897581359449
+      delta_sp: 0.00014163006630657504
+(1, [128170, 21128020, 71439381]):
+  (128170, 21128020):
+    NC.GAX:
+      cross-correlation: 0.9568580162570767
+      delta_sp: -0.0009151052335329476
+    NC.GBG:
+      cross-correlation: 0.9126194945863777
+      delta_sp: -0.000298074865806062
+    NC.GGP:
+      cross-correlation: 0.9280948364121858
+      delta_sp: 0.001439937384830869
+    NC.GSS:
+      cross-correlation: 0.994401630693455
+      delta_sp: 1.0680964880276696e-05
+    NC.NCF:
+      cross-correlation: 0.9088387854316329
+      delta_sp: -0.0011590972909695275
+    NC.NMC:
+      cross-correlation: 0.9862419721384005
+      delta_sp: -0.0009282260383943631
+    NC.NMT:
+      cross-correlation: 0.9846372996595437
+      delta_sp: 0.001396366530402677
+    NC.NMW:
+      cross-correlation: 0.9648592012717543
+      delta_sp: -0.000332216348727897
+    NC.NSH:
+      cross-correlation: 0.9692114957609587
+      delta_sp: -0.0004062657074679456
+    NC.NWR:
+      cross-correlation: 0.9050628483059246
+      delta_sp: 0.0011678849783074725
+  (128170, 71439381):
+    NC.GHC:
+      cross-correlation: 0.9733714517517333
+      delta_sp: 0.00047800384820117364
+    NC.GHL:
+      cross-correlation: 0.9068430552958529
+      delta_sp: 0.003014705904138555
+    NC.GMK:
+      cross-correlation: 0.9065420223651204
+      delta_sp: -0.0033940251827486237
+    NC.GSS:
+      cross-correlation: 0.9914625584750167
+      delta_sp: 0.00180837430295816
+    NC.NMC:
+      cross-correlation: 0.9786702149058922
+      delta_sp: -0.0020462103589413833
+    NC.NMT:
+      cross-correlation: 0.9864960110908364
+      delta_sp: 0.0005451639052187485
+    NC.NMW:
+      cross-correlation: 0.930615266906894
+      delta_sp: 0.0024440346855925388
+    NC.NSH:
+      cross-correlation: 0.9647230533988332
+      delta_sp: -0.0011074670308710566
+  (21128020, 71439381):
+    NC.GSS:
+      cross-correlation: 0.9916616566912325
+      delta_sp: 0.0013717923952207278
+    NC.NMC:
+      cross-correlation: 0.9782262962973857
+      delta_sp: -0.0009961648317969723
+    NC.NMT:
+      cross-correlation: 0.9850779733145355
+      delta_sp: 0.0004577897020404398
+    NC.NMW:
+      cross-correlation: 0.9404381278318861
+      delta_sp: -0.0003980950987950982
+    NC.NPV:
+      cross-correlation: 0.9815645816234242
+      delta_sp: 0.0005946023654632079
+    NC.NSH:
+      cross-correlation: 0.9740042124601498
+      delta_sp: -0.001436980100583865
+    NC.NTYB:
+      cross-correlation: 0.9858790611240439
+      delta_sp: -0.0020176107068857058
