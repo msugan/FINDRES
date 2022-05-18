@@ -21,7 +21,6 @@ setuptools.setup(
     ],
     install_requires=[
         'numpy',
-        'pandas',
         'tqdm',
         'obspy',
         'pyyaml',
