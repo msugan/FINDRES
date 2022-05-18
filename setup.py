@@ -21,8 +21,6 @@ setuptools.setup(
     ],
     install_requires=[
         'numpy',
-        'scipy',
-        'scikit-learn',
         'pandas',
         'tqdm',
         'obspy',
