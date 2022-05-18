@@ -34,6 +34,7 @@ parser.add_argument('--phase_file', type=Path, default=None,
 parser.add_argument('--phase_type',
                     choices=['hypoinv', 'nll', 'quakeml', 'hypoel'] + list(fres.custom_formats.registry),
                     default=None, help="Type of PHASE_FILE")
+parser.add_argument('--picker', help="Enable picker", default=False, action='store_true')
 parser.add_argument('--taup_model', type=Path, default=None,
                     help="Velocity model file without extension (assumed to be .tvel) if available")
 parser.add_argument('--rebuild_model', default=False, action='store_true',
@@ -103,12 +104,16 @@ if __name__ == '__main__':
                                                               tol=parameters['stations_distance_tolerance'])
                 pick_p_1, pick_s_1 = fres.read.picks(event_1, event_coordinates, station_coordinates_1, trace_1,
                                                      parameters,
-                                                     cli_args.phase_file, cli_args.phase_type, get_travel_times)
+                                                     cli_args.phase_file, cli_args.phase_type,
+                                                     cli_args.picker, parameters.get('picker_arguments'),
+                                                     get_travel_times)
                 station_coordinates_2 = fres.read.coordinates(inventory, network, station, event_2.date,
                                                               tol=parameters['stations_distance_tolerance'])
                 pick_p_2, pick_s_2 = fres.read.picks(event_2, event_coordinates, station_coordinates_2, trace_2,
                                                      parameters,
-                                                     cli_args.phase_file, cli_args.phase_type, get_travel_times)
+                                                     cli_args.phase_file, cli_args.phase_type,
+                                                     cli_args.picker, parameters.get('picker_arguments'),
+                                                     get_travel_times)
             except fres.read.InventoryLookupError as err:
                 logging.warning(f"Inventory lookup error for {network + '.' + station} "
                                 f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
@@ -116,6 +121,11 @@ if __name__ == '__main__':
                 continue
             except fres.read.MissingPhaseDataError as err:
                 logging.warning(f"Phases lookup error for {network + '.' + station} "
+                                f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
+                logging.debug("Exception info.", exc_info=err)
+                continue
+            except fres.read.SPickEstimationError as err:
+                logging.warning(f"S pick estimation error for {network + '.' + station} "
                                 f"while analyzing ({event_1.name}, {event_2.name}). Skipping.")
                 logging.debug("Exception info.", exc_info=err)
                 continue
