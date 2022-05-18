@@ -39,17 +39,6 @@ def cc_preprocess(trace, pick_p_mean_delay, pick_s_mean_delay, freq_range, full_
     return new_trace
 
 
-def sync_traces(trace_1, trace_2, shift):
-    trace_1.stats.update({'starttime': 0.0})
-    trace_2.stats.update({'starttime': shift * trace_1.stats.delta})
-    starttime = min(trace_1.stats.starttime, trace_2.stats.starttime)
-    endtime = max(trace_1.stats.endtime, trace_2.stats.endtime)
-    trace_1.trim(starttime=starttime, endtime=endtime, pad=True, fill_value=0.0)
-    trace_2.trim(starttime=starttime, endtime=endtime, pad=True, fill_value=0.0)
-    trace_1.stats.update({'starttime': 0.0})
-    trace_2.stats.update({'starttime': 0.0})
-
-
 def trim_window(trace, center, window):
     trace.trim(starttime=trace.stats.starttime + center - window[0],
                endtime=trace.stats.starttime + center + window[1],

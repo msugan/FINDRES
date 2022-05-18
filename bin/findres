@@ -136,7 +136,9 @@ if __name__ == '__main__':
                 cc_shift, cc_value = fres.analyze.correlate_waves(trace_1_filtered,
                                                                   trace_2_filtered,
                                                                   parameters['max_shift'])
-                fres.utils.sync_traces(trace_1, trace_2, cc_shift)
+                trace_2.trim(starttime=trace_2.stats.starttime - cc_shift * trace_2.stats.delta,
+                             endtime=trace_2.stats.endtime - cc_shift * trace_2.stats.delta,
+                             pad=True, fill_value=0.0)
 
             except fres.analyze.EmptyOrConstantTraceError as err:
                 logging.warning(f"Empty or constant trace error for {network + '.' + station} "
@@ -153,7 +155,9 @@ if __name__ == '__main__':
                     os.makedirs(graphics_dir)
 
                 starttime = parameters['full_cc_waveform_window'][0] - pick_p_mean_delay
-                fres.utils.sync_traces(trace_1_filtered, trace_2_filtered, cc_shift)
+                trace_2_filtered.trim(starttime=trace_2_filtered.stats.starttime - cc_shift * trace_2.stats.delta,
+                                      endtime=trace_2_filtered.stats.endtime - cc_shift * trace_2.stats.delta,
+                                      pad=True, fill_value=0.0)
                 fres.plot.signals(trace_1_filtered, trace_2_filtered,
                                   starttime + pick_p_mean_delay - parameters['p_cs_waveform_window'][0],
                                   starttime + pick_p_mean_delay + parameters['p_cs_waveform_window'][1],
@@ -172,7 +176,9 @@ if __name__ == '__main__':
 
                 p_shift, _ = fres.analyze.correlate_waves(trace_1p, trace_2p, parameters['max_shift'])
                 if p_shift != 0:
-                    fres.utils.sync_traces(trace_1p, trace_2p, p_shift)
+                    trace_2p.trim(starttime=trace_2p.stats.starttime - p_shift * trace_2p.stats.delta,
+                                  endtime=trace_2p.stats.endtime - p_shift * trace_2p.stats.delta,
+                                  pad=True, fill_value=0.0)
                 cross_spectrum = MTCross(trace_1p.data,
                                          trace_2p.data,
                                          dt=trace_1p.stats.delta,
@@ -195,7 +201,9 @@ if __name__ == '__main__':
 
                 s_shift, _ = fres.analyze.correlate_waves(trace_1s, trace_2s, parameters['max_shift'])
                 if s_shift != 0:
-                    fres.utils.sync_traces(trace_1s, trace_2s, s_shift)
+                    trace_2s.trim(starttime=trace_2s.stats.starttime - s_shift * trace_2s.stats.delta,
+                                  endtime=trace_2s.stats.endtime - s_shift * trace_2s.stats.delta,
+                                  pad=True, fill_value=0.0)
                 cross_spectrum = MTCross(trace_1s.data,
                                          trace_2s.data,
                                          dt=trace_1s.stats.delta,
