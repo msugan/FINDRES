@@ -8,6 +8,8 @@ import pandas as pd
 from obspy import UTCDateTime
 from obspy.geodetics import gps2dist_azimuth
 
+from obspy.signal.trigger import pk_baer
+
 from . import custom_formats
 from .utils import estimate_s_pick
 
@@ -17,6 +19,10 @@ class InventoryLookupError(BaseException):
 
 
 class MissingPhaseDataError(BaseException):
+    pass
+
+
+class SPickEstimationError(BaseException):
     pass
 
 
@@ -131,31 +137,45 @@ def coordinates(inventory, network_code, station_code, time, tol=0.2):
         raise InventoryLookupError(f"Station {station_code} at {time} cannot be found.")
 
 
-def picks(event, event_coordinates, station_coordinates, trace, params, phase_file=None, phase_type=None,
-          travel_times_function=None):
+def picks(event, event_coordinates, station_coordinates, trace, params, phase_file=None, phase_type=None, picker=False,
+          picker_arguments=None, travel_times_function=None):
     station_latitude, station_longitude = station_coordinates
 
     if phase_file is None:
-        if travel_times_function is None:
-            raise MissingPhaseDataError("Either a phase file or a model must be provided")
-        else:
+        if picker:
+            if picker_arguments is None:
+                raise MissingPhaseDataError("Picker arguments must be provided")
+            p_pick_sample_delay, _ = pk_baer(trace.data, trace.stats.sampling_rate, *picker_arguments)
+            p_pick = trace.stats.starttime + trace.stats.delta * p_pick_sample_delay
+            s_pick = None
+        elif travel_times_function is not None:
             p_pick, s_pick = compute_picks(event, station_latitude, station_longitude, travel_times_function,
                                            p_model_corr=params['p_velocity_model_correction'],
                                            s_model_corr=params['s_velocity_model_correction'])
+        else:
+            raise MissingPhaseDataError("Either a phase file, picker or a model must be provided")
     else:
         p_pick, s_pick = _read_picks(event.date, trace.stats.station, phase_file, phase_type)
         if p_pick is None:
-            if travel_times_function is None:
-                raise MissingPhaseDataError("Phase file with picking for P phase or a model must be provided")
-            else:
+            if picker:
+                if picker_arguments is None:
+                    raise MissingPhaseDataError("Picker arguments must be provided")
+                p_pick_sample_delay, _ = pk_baer(trace.data, trace.stats.sampling_rate, *picker_arguments)
+                p_pick = trace.stats.starttime + trace.stats.delta * p_pick_sample_delay
+                s_pick = None
+            elif travel_times_function is not None:
                 p_pick, s_pick = compute_picks(event, station_latitude, station_longitude, travel_times_function,
                                                p_model_corr=params['p_velocity_model_correction'],
                                                s_model_corr=params['s_velocity_model_correction'])
+            else:
+                raise MissingPhaseDataError("Phase file with picking for P phase, picker or a model must be provided")
         if s_pick is None:
             event_latitude, event_longitude = event_coordinates
             epi_dist, _, _ = gps2dist_azimuth(event_latitude, event_longitude, station_latitude, station_longitude)
-            s_pick = estimate_s_pick(trace, p_pick, epi_dist, params['Vp'], params['Vs'],
-                                     params['s_pick_estimation_window'])
+            try:
+                s_pick = estimate_s_pick(trace, p_pick, epi_dist, params)
+            except ValueError as err:
+                raise SPickEstimationError(str(err))
     return p_pick, s_pick
 
 

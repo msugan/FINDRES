@@ -1,6 +1,10 @@
+picker_arguments: [20, 60, 7.0, 12.0, 100, 100] # arguments of the Baer picker, see https://docs.obspy.org/tutorial/code_snippets/trigger_tutorial.html#picker-examples
 p_velocity_model_correction: 0.5 # inaccuracy in the velocity model for P (sec)
 s_velocity_model_correction: 0.3 # inaccuracy in the velocity model for S (sec)
 s_pick_estimation_window: [ 10, 200 ] # number of samples before and after the expected S arrival time
+s_pick_estimation_shift: 1 # time between S pick and maximum envelope in estimate_s_pick (sec)
+s_pick_estimation_freqmin: 1 # minimum frequency in bandpass filter in estimate_s_pick (Hz)
+s_pick_estimation_freqmax: 10 # maximum frequency in bandpass filter in estimate_s_pick (Hz)
 Vp: 5700 # P speed m/sec
 Vs: 3200 # S speed m/sec
 max_shift: 800 # maximum shift in samples for the cross correlation

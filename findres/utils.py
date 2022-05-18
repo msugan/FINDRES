@@ -39,17 +39,6 @@ def cc_preprocess(trace, pick_p_mean_delay, pick_s_mean_delay, freq_range, full_
     return new_trace
 
 
-def sync_traces(trace_1, trace_2, shift):
-    trace_1.stats.update({'starttime': 0.0})
-    trace_2.stats.update({'starttime': shift * trace_1.stats.delta})
-    starttime = min(trace_1.stats.starttime, trace_2.stats.starttime)
-    endtime = max(trace_1.stats.endtime, trace_2.stats.endtime)
-    trace_1.trim(starttime=starttime, endtime=endtime, pad=True, fill_value=0.0)
-    trace_2.trim(starttime=starttime, endtime=endtime, pad=True, fill_value=0.0)
-    trace_1.stats.update({'starttime': 0.0})
-    trace_2.stats.update({'starttime': 0.0})
-
-
 def trim_window(trace, center, window):
     trace.trim(starttime=trace.stats.starttime + center - window[0],
                endtime=trace.stats.starttime + center + window[1],
@@ -57,24 +46,30 @@ def trim_window(trace, center, window):
                fill_value=0.0)
 
 
-def estimate_s_pick(trace, pick, distance, vp, vs, window, shift=1, freqmin=1, freqmax=10):
+def estimate_s_pick(trace, p_pick, distance, params):
+    vp = params['Vp']
+    vs = params['Vs']
+    window = params['s_pick_estimation_window']
+    shift = params['s_pick_estimation_shift']
+    freqmin = params['s_pick_estimation_freqmin']
+    freqmax = params['s_pick_estimation_freqmax']
     trace_filt = trace.copy()
     trace_filt.filter("bandpass", freqmin=freqmin, freqmax=freqmax, corners=2, zerophase=True)
     data_envelope = envelope(trace_filt.data)
     sample_shift = int(shift * trace.stats.sampling_rate)
 
-    pick_sample = int((pick - trace.stats.starttime) * trace.stats.sampling_rate)
-    thumb_rule_delay_sample = int(distance * (vp - vs) / (vp * vs) * trace.stats.sampling_rate)
-    reference_sample = pick_sample + thumb_rule_delay_sample
+    p_pick_sample = int((p_pick - trace.stats.starttime) * trace.stats.sampling_rate)
+    delta_ps_thumble_rule_sample = int(distance * (vp - vs) / (vp * vs) * trace.stats.sampling_rate)
+    s_pick_thumble_rule_sample = p_pick_sample + delta_ps_thumble_rule_sample
 
-    ind = np.argmax(data_envelope) - sample_shift
     delta1, delta2 = window
-    start = reference_sample - delta1
-    stop = reference_sample + delta2
-    if not (pick_sample < ind and start <= ind <= stop):
-        ind = start + np.argmax(data_envelope[start:stop]) - sample_shift
+    start = s_pick_thumble_rule_sample - delta1
+    stop = s_pick_thumble_rule_sample + delta2
+    if start < 0 or stop > data_envelope.size:
+        raise ValueError("Envelope out of bound (caused by rule of thumb)")
+    s_pick_sample = start + np.argmax(data_envelope[start:stop]) - sample_shift
 
-    return trace.stats.starttime + ind * trace.stats.delta
+    return trace.stats.starttime + s_pick_sample * trace.stats.delta
 
 
 def longest_subsequence_of_trues(bools):

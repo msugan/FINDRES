@@ -77,6 +77,7 @@ optional arguments:
                         Catalogue containing the phase picking and other information if available (default: None)
   --phase_type {hypoinv,nll,quakeml,hypoel,rise_custom,hyposynth}
                         Type of PHASE_FILE (default: None)
+  --picker              Enable picker (default: False) 
   --taup_model TAUP_MODEL
                         Velocity model file without extension (assumed to be .tvel) if available (default: None)
   --rebuild_model       Force the rebuild of the velocity model (regenerate ObsPy local cache) (default: False)
