@@ -1,4 +1,6 @@
 picker_arguments: [20, 60, 7.0, 12.0, 100, 100] # arguments of the Baer picker, see https://docs.obspy.org/tutorial/code_snippets/trigger_tutorial.html#picker-examples
+picker_freqmin: 1 # minimum frequency in bandpass filter in p_picker (Hz)
+picker_freqmax: 25 # maximum frequency in bandpass filter in p_picker (Hz)
 p_velocity_model_correction: 0.5 # inaccuracy in the velocity model for P (sec)
 s_velocity_model_correction: 0.3 # inaccuracy in the velocity model for S (sec)
 s_pick_estimation_window: [ 10, 200 ] # number of samples before and after the expected S arrival time

@@ -3,6 +3,7 @@ from collections import defaultdict
 from obspy import Stream
 from obspy.signal.filter import envelope
 import numpy as np
+from obspy.signal.trigger import pk_baer
 
 
 def piecewise_from_thresholds(x, thresholds):
@@ -44,6 +45,15 @@ def trim_window(trace, center, window):
                endtime=trace.stats.starttime + center + window[1],
                pad=True,
                fill_value=0.0)
+
+
+def p_picker(trace, params):
+    trace_filtered = trace.copy()
+    trace_filtered.filter("bandpass", zerophase=True,
+                          freqmin=params['picker_freqmin'], freqmax=params['picker_freqmax'])
+    p_pick_sample_delay, _ = pk_baer(trace_filtered.data.astype(np.float32), trace.stats.sampling_rate,
+                                     *params['picker_arguments'])
+    return trace.stats.starttime + trace.stats.delta * p_pick_sample_delay
 
 
 def estimate_s_pick(trace, p_pick, distance, params):

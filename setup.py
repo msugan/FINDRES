@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="findres",
-    version="0.3.2",
+    version="0.4",
     author="Monica Sugan, Stefano Campanella",
     author_email="msugan@inogs.it, scampanella@inogs.it",
     description="Repeating earthquake discovery using cross-correlation and differential arrival times",

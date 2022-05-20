@@ -11,7 +11,7 @@ from obspy.geodetics import gps2dist_azimuth
 from obspy.signal.trigger import pk_baer
 
 from . import custom_formats
-from .utils import estimate_s_pick
+from .utils import estimate_s_pick, p_picker
 
 
 class InventoryLookupError(BaseException):
@@ -137,7 +137,7 @@ def coordinates(inventory, network_code, station_code, time, tol=0.2):
         raise InventoryLookupError(f"Station {station_code} at {time} cannot be found.")
 
 
-def picks(event, event_coordinates, station_coordinates, trace, params, phase_file=None, phase_type=None, picker=False,
+def picks(event, event_coordinates, station_coordinates, trace: obspy.Trace, params, phase_file=None, phase_type=None, picker=False,
           picker_arguments=None, travel_times_function=None):
     station_latitude, station_longitude = station_coordinates
 
@@ -145,8 +145,7 @@ def picks(event, event_coordinates, station_coordinates, trace, params, phase_fi
         if picker:
             if picker_arguments is None:
                 raise MissingPhaseDataError("Picker arguments must be provided")
-            p_pick_sample_delay, _ = pk_baer(trace.data, trace.stats.sampling_rate, *picker_arguments)
-            p_pick = trace.stats.starttime + trace.stats.delta * p_pick_sample_delay
+            p_pick = p_picker(trace, params)
             s_pick = None
         elif travel_times_function is not None:
             p_pick, s_pick = compute_picks(event, station_latitude, station_longitude, travel_times_function,
@@ -160,8 +159,7 @@ def picks(event, event_coordinates, station_coordinates, trace, params, phase_fi
             if picker:
                 if picker_arguments is None:
                     raise MissingPhaseDataError("Picker arguments must be provided")
-                p_pick_sample_delay, _ = pk_baer(trace.data, trace.stats.sampling_rate, *picker_arguments)
-                p_pick = trace.stats.starttime + trace.stats.delta * p_pick_sample_delay
+                p_pick = p_picker(trace, params)
                 s_pick = None
             elif travel_times_function is not None:
                 p_pick, s_pick = compute_picks(event, station_latitude, station_longitude, travel_times_function,
