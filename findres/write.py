@@ -22,5 +22,5 @@ def dump_hypodd(families, catalogue, errors, repeaters, parameters, output_dir):
                             delta_v = parameters['Vp'] - parameters['Vs']
                             ttp = -parameters['Vs'] * delta_sp / delta_v
                             file.write(f"{station}     {ttp: 10.9f}    {cc:.2f}    P\n")
-                            tts = parameters['Vp'] * delta_sp / delta_v
+                            tts = -parameters['Vp'] * delta_sp / delta_v
                             file.write(f"{station}     {tts: 10.9f}    {cc:.2f}    S\n")
