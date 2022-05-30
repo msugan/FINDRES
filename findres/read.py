@@ -8,8 +8,6 @@ import pandas as pd
 from obspy import UTCDateTime
 from obspy.geodetics import gps2dist_azimuth
 
-from obspy.signal.trigger import pk_baer
-
 from . import custom_formats
 from .utils import estimate_s_pick, p_picker
 
@@ -137,8 +135,8 @@ def coordinates(inventory, network_code, station_code, time, tol=0.2):
         raise InventoryLookupError(f"Station {station_code} at {time} cannot be found.")
 
 
-def picks(event, event_coordinates, station_coordinates, trace: obspy.Trace, params, phase_file=None, phase_type=None, picker=False,
-          picker_arguments=None, travel_times_function=None):
+def picks(event, event_coordinates, station_coordinates, trace: obspy.Trace, params, phase_file=None, phase_type=None,
+          picker=False, picker_arguments=None, travel_times_function=None):
     station_latitude, station_longitude = station_coordinates
 
     if phase_file is None:
