@@ -29,7 +29,7 @@ The package has few dependencies; the recommended way of installing them is via 
 create a test environment using
 
 ```console
-foo@bar ~ % conda create -n findres-test python=3.8 numpy=1.21 pandas tqdm pyyaml obspy -c conda-forge
+foo@bar ~ % conda create -n findres-test python=3.8 numpy=1.21 tqdm pyyaml obspy -c conda-forge
 ```
 
 Remember to activate the environment with
