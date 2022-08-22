@@ -136,7 +136,7 @@ extensive information can be found in the [provided example](data/california/par
 # References
 
 Sugan, M., Campanella, S., Vuan, A., and Shakibay Senobari, N., (2022). A Python Code for detecting true Repeating Earthquakes
-from Self-similar Waveforms (FINDRES). Submitted
+from Self-similar Waveforms (FINDRES). Seismological Research Letters, https://doi.org/10.1785/0220220048
 
 Shakibay Senobari, N., and Funning, G. J., (2019). Widespread Fault Creep in the Northern San Francisco Bay Area Revealed by
 Multistation Cluster Detection of Repeating Earthquakes, Geophysical Research Letters, 46(12),
